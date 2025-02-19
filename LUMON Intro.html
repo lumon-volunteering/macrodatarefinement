@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUMON Intro</title>
+    <style>
+            /* Ensure html and body fill the viewport */
+            html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #001C2E;
+            font-family: Gotham, sans-serif;
+            /* The background and CRT filter remain fully opaque */
+            }
+
+            #fullScreenOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;  /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            z-index: 9999; /* Ensure it sits on top of everything */
+            pointer-events: none; /* Allow interactions to pass through */
+            }
+
+
+            /* Ensure the document fills the viewport */
+            html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #001C2E;
+            }
+
+            /* Fullscreen wrapper using Grid to center content */
+            #pageWrapper {
+            display: grid;
+            place-items: center;
+            width: 100vw;
+            height: 100vh;
+            background: #00122b;
+            /* Optionally, add your CRT effect class here if needed:
+                class="crt" */
+            }
+
+            /* The inner container that always maintains a 1.5:1 ratio.
+            It will expand to the maximum size that fits inside the viewport. */
+            #appContainer {
+
+            width: calc(min(90vw, 1.5 * 85vh));
+            height: calc(min(90vh, 90vw / 1.5));
+            background: #001c2e;
+            margin-left: -450px;
+            z-index: 3;
+            border-radius: 100px;
+            overflow: hidden;
+            }
+
+            /* Wrap all UI elements in a container for fade-out.
+            This container’s fade-out will not affect the background or CRT filter. */
+            #uiContainer {
+            position: relative;
+            opacity: 1;
+            transition: opacity 0.7s ease-out;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeOut 1s ease-out 6.5s forwards;
+            }
+
+            /* New Globe Container */
+            #globeContainer {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(2.7);
+            z-index: 0;
+            height: calc(15vh * 0.85);
+            }
+           #globeContainer svg {
+            display: block;
+            height: 100%;
+            transform: scale(0.85);
+            filter: drop-shadow(0 0 4px #37dfef);
+            }
+
+            #logoBox {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(2.8);
+            z-index: 1;
+            height: calc(15vh * 0.85);
+            opacity: 0;
+            animation: fadeIn 0.2s ease-in forwards;
+            animation-delay: 3.1s;
+            }
+           #logoBox svg {
+            display: block;
+            height: 100%;
+            transform: scale(0.85);
+            }
+
+            @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+            }
+
+            @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+            }
+
+            /* Ensure the stroke is visible */
+            .draw {
+            stroke-dasharray: 1000;  /* a high value; you can adjust based on path length */
+            stroke-dashoffset: 1000;
+            animation: drawLine 1.5s linear forwards;
+            }
+
+            @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+            }
+
+
+            .drawReverse {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: -1000;
+            animation: drawLineReverse 1.5s linear forwards;
+            }
+            @keyframes drawLineReverse {
+            to { stroke-dashoffset: 0; }
+            }
+
+
+            .reverse {
+            animation-direction: reverse;
+            }
+            
+
+            body {
+            cursor: none;
+            }
+
+            #customCursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 2;
+            width: 32px;  /* adjust size as needed */
+            height: 32px; /* adjust size as needed */
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 0 6px #fff);
+            }
+            
+            /* ===== CRT Effect Filter (without text shadow animation) ===== */
+            @keyframes flicker {
+            0% { opacity: 0.27861; }
+            5% { opacity: 0.34769; }
+            10% { opacity: 0.23604; }
+            15% { opacity: 0.90626; }
+            20% { opacity: 0.18128; }
+            25% { opacity: 0.83891; }
+            30% { opacity: 0.65583; }
+            35% { opacity: 0.67807; }
+            40% { opacity: 0.26559; }
+            45% { opacity: 0.84693; }
+            50% { opacity: 0.96019; }
+            55% { opacity: 0.08594; }
+            60% { opacity: 0.20313; }
+            65% { opacity: 0.71988; }
+            70% { opacity: 0.53455; }
+            75% { opacity: 0.37288; }
+            80% { opacity: 0.71428; }
+            85% { opacity: 0.70419; }
+            90% { opacity: 0.7003; }
+            95% { opacity: 0.36108; }
+            100% { opacity: 0.24387; }
+            }
+            
+            /* The .crt class no longer applies any text shadow animation,
+            but it still establishes relative positioning so that the pseudo-elements overlay the page. */
+            .crt {
+            position: relative;
+            }
+            
+            .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 3;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+            }
+            
+            /* Vignette effect added to the CRT filter */
+            .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: radial-gradient(ellipse farthest-corner, rgba(0,28,46,0) 75%, #000b13 100%),
+                        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 3;
+            background-size: cover, 100% 2px, 3px 100%;
+            pointer-events: none;
+            }
+
+    </style>
+
+</head>
+<body>
+
+    <div id="pageWrapper">
+        <div id="appContainer" class="crt">
+
+            <div id="customCursor">
+                <img src="cursor.png" alt="custom cursor">
+            </div>
+
+            <div id="uiContainer">
+
+                <div id="logoBox">
+                        <svg width="300" height="150" viewBox="0 0 300 150">
+                            <!-- Rectangle covering the central area (as a path) -->
+                            <path d="M40,45 H260 V105 H40 Z" 
+                            fill="#001C2E" stroke="none"/>
+                        </svg>
+                </div>
+
+                <!-- Globe Container -->
+                <div id="globeContainer">
+                    <svg width="300" height="150" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Globe as a path (converted from an ellipse) -->
+                        <!-- This path approximates an ellipse with center (150,75) and radii 150 and 75 -->
+                        <path d="M150,0
+                        A150,75 0 1,1 150,150
+                        A150,75 0 1,1 150,0
+                        Z"
+                            fill="none" stroke="#bce2e6" stroke-width="4" class="draw"/>
+                        
+                        <!-- Horizontal top line (converted from a line element) -->
+                        <path d="M30,30 L270,30" 
+                            stroke="#bce2e6" stroke-width="4" class="drawReverse" style="animation-delay: 2.1s;"/>
+                        
+                        <!-- Horizontal bottom line -->
+                        <path d="M30,120 L270,120" 
+                            stroke="#bce2e6" stroke-width="4" class="drawReverse" style="animation-delay: 2.6s;"/>
+                        
+                        <!-- Arc paths across the globe -->
+                        <path d="M150,0 A100,75 0 0,1 150,150" 
+                            fill="none" stroke="#bce2e6" stroke-width="4" class="draw" style="animation-delay: 1.1s;"/>
+                        <path d="M150,0 A100,75 0 0,0 150,150" 
+                            fill="none" stroke="#bce2e6" stroke-width="4" class="drawReverse" style="animation-delay: 0.6s;"/>
+                        <path d="M150,0 A60,75 0 0,1 150,150" 
+                            fill="none" stroke="#bce2e6" stroke-width="4" class="draw" style="animation-delay: 2.2s;"/>
+                        <path d="M150,0 A60,75 0 0,0 150,150" 
+                            fill="none" stroke="#bce2e6" stroke-width="4" class="drawReverse" style="animation-delay: 1.55s;"/>
+                        
+                    </svg>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+     <!-- Full-screen overlay SVG -->
+     <svg id="fullScreenOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" 
+        xmlns="http://www.w3.org/2000/svg" 
+        style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
+        <path fill="#00122b" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
+     </svg>
+
+     <script>
+        function updateOverlayHole() {
+          const appContainer = document.getElementById('appContainer');
+          const overlaySVG = document.getElementById('fullScreenOverlay');
+          const pathElement = overlaySVG.querySelector('path');
+    
+          // Get the bounding rect of appContainer relative to the viewport
+          const rect = appContainer.getBoundingClientRect();
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+    
+          // Convert appContainer's position and size to percentages (0–100) of the viewport
+          const x = (rect.left / vw) * 100;
+          const y = (rect.top / vh) * 100;
+          const w = (rect.width / vw) * 100;
+          const h = (rect.height / vh) * 100;
+    
+          // Get the computed border-radius in pixels (assume it is set to 100px)
+          const computedRadius = parseFloat(getComputedStyle(appContainer).borderRadius) || 100;
+          // Convert this pixel value into SVG coordinate units:
+          // For horizontal: rx = (computedRadius / vw) * 100
+          // For vertical:   ry = (computedRadius / vh) * 100
+          const rx = (computedRadius / vw) * 100;
+          const ry = (computedRadius / vh) * 100;
+    
+          // Build the inner rounded rectangle path using arc commands
+          const innerRounded = `
+            M ${x + rx}, ${y}
+            H ${x + w - rx}
+            A ${rx},${ry} 0 0 1 ${x + w}, ${y + ry}
+            V ${y + h - ry}
+            A ${rx},${ry} 0 0 1 ${x + w - rx}, ${y + h}
+            H ${x + rx}
+            A ${rx},${ry} 0 0 1 ${x}, ${y + h - ry}
+            V ${y + ry}
+            A ${rx},${ry} 0 0 1 ${x + rx}, ${y}
+            Z`;
+    
+          // Construct the full path:
+          // Outer rectangle covers the whole viewBox (0,0 to 100,100)
+          // then subtract the inner rounded rectangle
+          const d = `M0,0 H100 V100 H0 Z ${innerRounded}`;
+          pathElement.setAttribute('d', d);
+        }
+    
+        // Update on load and when the viewport changes.
+        window.addEventListener('resize', updateOverlayHole);
+        window.addEventListener('scroll', updateOverlayHole);
+        updateOverlayHole();
+      </script>
+
+        <script>
+            document.addEventListener('mousemove', function(e) {
+            var cursor = document.getElementById('customCursor');
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            });
+        </script>
+
+        <script>
+            window.addEventListener("load", function() {
+            // Create an image object and set its source (adjust the path as needed)
+            const img = new Image();
+            // Note: Use a relative URL or URL from your server rather than an absolute Windows path.
+            img.src = "lumon_industries_logo.png";
+            // Ensure CORS is allowed if needed:
+            img.crossOrigin = "anonymous";
+            
+            img.onload = function() {
+                // Create an offscreen canvas
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+
+                // Draw the original image into the canvas
+                ctx.drawImage(img, 0, 0);
+
+                // Get pixel data
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Loop over every pixel.
+                // For each pixel, if it is "white" (R, G, B all above 240),
+                // change it to #37dfef (RGB 55, 223, 239).
+                // Otherwise, set the alpha to 0 (transparent).
+                for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i+1];
+                const b = data[i+2];
+                if (r > 240 && g > 240 && b > 240) {
+                    data[i] = 240;      // Red: 0x37
+                    data[i+1] = 240;   // Green: 0xdf
+                    data[i+2] = 240;   // Blue: 0xef
+                    // Leave alpha unchanged (or set to 255)
+                    data[i+3] = 255;
+                } else {
+                    // Make non-white pixels transparent
+                    data[i+3] = 0;
+                }
+                }
+                
+                // Put the modified pixel data back into the canvas
+                ctx.putImageData(imageData, 0, 0);
+
+                // Create a new image element from the canvas
+                const processedImg = new Image();
+                processedImg.src = canvas.toDataURL();
+
+                // Style the image so that it appears in front of the globe SVG
+                processedImg.style.position = "absolute";
+                // Adjust the z-index so that it's in front of the globe but behind the bin lids, for example.
+                processedImg.style.zIndex = "0"; 
+                // Set a location on screen; adjust as needed.
+                processedImg.style.left = "50%";
+                processedImg.style.top = "40%";
+                processedImg.style.transform = "translate(-50%, -50%)";
+                processedImg.style.filter = "drop-shadow(0 0 4px #37dfef)";
+                processedImg.style.zIndex = "2"
+                processedImg.style.width = "40%"; 
+                processedImg.style.height = "auto";
+
+            processedImg.style.opacity = 0; // start hidden
+            processedImg.style.animation = 'fadeIn .3s ease-out 4.3s forwards, fadeOut 1s ease-out 6.5s forwards';
+
+            processedImg.id = "processedImg";
+            const uiContainer = document.getElementById("appContainer");
+            uiContainer.appendChild(processedImg);
+
+            };
+
+            img.onerror = function(e) {
+                console.error("Error loading image:", e);
+            };
+            });
+        </script>
+
+        <script>
+            // Listen for the fadeOut animation end on uiContainer
+            document.getElementById("uiContainer").addEventListener("animationend", function(e) {
+                if (e.animationName === "fadeOut") {
+                    // Redirect to the specified file URL after fade out completes
+                    window.location.href = "file:///C:/Users/jonat/Documents/Macrodata/LUMON OS/Macrodata Rolodex.html";
+                }
+            });
+        </script>
+        
+
+
+</body>
+</html>

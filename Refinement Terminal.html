@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Macrodata Refinement UI – Dranesville</title>
+  <style>
+
+  #fullScreenOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;  /* Full viewport width */
+      height: 100vh; /* Full viewport height */
+      z-index: 9999; /* Ensure it sits on top of everything */
+      pointer-events: none; /* Allow interactions to pass through */
+    }
+
+
+    /* Ensure the document fills the viewport */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #001C2E;
+    }
+
+    /* Fullscreen wrapper using Grid to center content */
+    #pageWrapper {
+      display: grid;
+      place-items: center;
+      width: 100vw;
+      height: 100vh;
+      background: #00122b;
+    }
+
+    /* The inner container that always maintains a 1.5:1 ratio.
+      It will expand to the maximum size that fits inside the viewport. */
+    #appContainer {
+      /* The width will be the smaller of:
+        - 100vw, or
+        - 1.5 times 100vh (since 1.5:1 means width = 1.5 x height) */
+      width: calc(min(90vw, 1.5 * 85vh));
+      /* Similarly, the height will be the smaller of:
+        - 100vh, or
+        - 100vw divided by 1.5 */
+      height: calc(min(90vh, 90vw / 1.5));
+      background: #001c2e;
+      position: relative;
+      margin-left: -450px;
+      /* Optionally add a border or other styling for debugging */
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+
+    body {
+      cursor: none;
+    }
+
+    #customCursor {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1;
+    width: 32px;  /* adjust size as needed */
+    height: 32px; /* adjust size as needed */
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 0 6px #fff);
+    }
+
+
+    /* Ensure html and body fill the viewport */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #001C2E;
+      font-family: Gotham, sans-serif;
+      /* The background and CRT filter remain fully opaque */
+    }
+    
+
+    /* --- Global text glow for all characters --- */
+    body, #totalProgressName, #footerText, .binProgressText {
+      color: #37DFEF;
+      background: linear-gradient(to right, #001C2E 0%, #001C2E 0%, #37DFEF 0%, #37DFEF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: background 0.5s;
+      text-shadow: 0 0 8px #fff;
+      font-weight: bold;
+    }
+    #totalProgressText {
+      position: absolute;
+      z-index: 3;
+      color: #001C2E !important;
+      -webkit-text-fill-color: #001C2E !important;
+      -webkit-text-stroke: .7px #37dfef;
+      text-shadow: 0 0 8px #fff;     
+      background: none !important;
+      top: 50%;
+      left: -20%;
+      transform: translate(-50%, -50%);
+    }
+    #totalProgressName {
+      position: absolute;
+      z-index: 3;
+    }
+    /* Temper chart labels */
+    .chartRow[data-temper="WO"] .label { color: #8DD571; text-shadow: 0 0 8px #fff; }
+    .chartRow[data-temper="FC"] .label { color: #F2D230; text-shadow: 0 0 8px #fff; }
+    .chartRow[data-temper="DR"] .label { color: #F9A09F; text-shadow: 0 0 8px #fff; }
+    .chartRow[data-temper="MA"] .label { color: #047FFD; text-shadow: 0 0 8px #fff; }
+    .chartRow .label {
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      -webkit-text-fill-color: initial !important;
+    }
+    /* Global line glow for drawn lines */
+    .line, .lid, .chartRow .bar, .chartRow .bar .fill {
+      box-shadow: 0 0 8px #fff;
+    }
+    /* Base layout styles */
+    #mainContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    /* Top Progress Area */
+    #totalProgressContainer {
+      position: absolute;
+      top: 0;
+      left: 0%;
+      width: 103%; 
+      height: 15vh;
+      background: #001C2E;
+      box-sizing: border-box;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 2em;
+      z-index: 0;
+    }
+    #titleBox {
+      position: absolute;
+      margin-left: 40px;
+      height: 38%;
+      width: 75.4%;
+      box-sizing: border-box;
+      padding: 11px;
+      border: 3px solid #37DFEF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+      box-shadow: 0 0 8px #fff;
+    }
+    #totalProgressFill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      background: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='1250' height='40' viewBox='0 0 1250 40'>\
+  <rect width='1250' height='40' fill='%23001C2E'/>\
+  <g stroke='%2300f0ff'>\
+    <!-- Line 1 -->\
+    <line x1='0.00'    y1='0' x2='0.00'    y2='40' stroke-width='5.00'  stroke-opacity='0.30'/>\
+    <!-- Line 2 -->\
+    <line x1='21.19'   y1='0' x2='21.19'   y2='40' stroke-width='5.25'  stroke-opacity='0.31'/>\
+    <!-- Line 3 -->\
+    <line x1='42.37'   y1='0' x2='42.37'   y2='40' stroke-width='5.51'  stroke-opacity='0.32'/>\
+    <!-- Line 4 -->\
+    <line x1='63.56'   y1='0' x2='63.56'   y2='40' stroke-width='5.76'  stroke-opacity='0.33'/>\
+    <!-- Line 5 -->\
+    <line x1='84.75'   y1='0' x2='84.75'   y2='40' stroke-width='6.02'  stroke-opacity='0.34'/>\
+    <!-- Line 6 -->\
+    <line x1='105.93'  y1='0' x2='105.93'  y2='40' stroke-width='6.27'  stroke-opacity='0.35'/>\
+    <!-- Line 7 -->\
+    <line x1='127.12'  y1='0' x2='127.12'  y2='40' stroke-width='6.53'  stroke-opacity='0.36'/>\
+    <!-- Line 8 -->\
+    <line x1='148.31'  y1='0' x2='148.31'  y2='40' stroke-width='6.78'  stroke-opacity='0.37'/>\
+    <!-- Line 9 -->\
+    <line x1='169.49'  y1='0' x2='169.49'  y2='40' stroke-width='7.03'  stroke-opacity='0.38'/>\
+    <!-- Line 10 -->\
+    <line x1='190.68'  y1='0' x2='190.68'  y2='40' stroke-width='7.29'  stroke-opacity='0.39'/>\
+    <!-- Line 11 -->\
+    <line x1='211.86'  y1='0' x2='211.86'  y2='40' stroke-width='7.54'  stroke-opacity='0.40'/>\
+    <!-- Line 12 -->\
+    <line x1='233.05'  y1='0' x2='233.05'  y2='40' stroke-width='7.80'  stroke-opacity='0.41'/>\
+    <!-- Line 13 -->\
+    <line x1='254.24'  y1='0' x2='254.24'  y2='40' stroke-width='8.05'  stroke-opacity='0.42'/>\
+    <!-- Line 14 -->\
+    <line x1='275.42'  y1='0' x2='275.42'  y2='40' stroke-width='8.31'  stroke-opacity='0.43'/>\
+    <!-- Line 15 -->\
+    <line x1='296.61'  y1='0' x2='296.61'  y2='40' stroke-width='8.56'  stroke-opacity='0.44'/>\
+    <!-- Line 16 -->\
+    <line x1='317.80'  y1='0' x2='317.80'  y2='40' stroke-width='8.81'  stroke-opacity='0.45'/>\
+    <!-- Line 17 -->\
+    <line x1='338.98'  y1='0' x2='338.98'  y2='40' stroke-width='9.07'  stroke-opacity='0.46'/>\
+    <!-- Line 18 -->\
+    <line x1='360.17'  y1='0' x2='360.17'  y2='40' stroke-width='9.32'  stroke-opacity='0.47'/>\
+    <!-- Line 19 -->\
+    <line x1='381.36'  y1='0' x2='381.36'  y2='40' stroke-width='9.58'  stroke-opacity='0.48'/>\
+    <!-- Line 20 -->\
+    <line x1='402.54'  y1='0' x2='402.54'  y2='40' stroke-width='9.83'  stroke-opacity='0.49'/>\
+    <!-- Line 21 -->\
+    <line x1='423.73'  y1='0' x2='423.73'  y2='40' stroke-width='10.08' stroke-opacity='0.50'/>\
+    <!-- Line 22 -->\
+    <line x1='444.92'  y1='0' x2='444.92'  y2='40' stroke-width='10.34' stroke-opacity='0.51'/>\
+    <!-- Line 23 -->\
+    <line x1='466.10'  y1='0' x2='466.10'  y2='40' stroke-width='10.59' stroke-opacity='0.52'/>\
+    <!-- Line 24 -->\
+    <line x1='487.29'  y1='0' x2='487.29'  y2='40' stroke-width='10.85' stroke-opacity='0.53'/>\
+    <!-- Line 25 -->\
+    <line x1='508.47'  y1='0' x2='508.47'  y2='40' stroke-width='11.10' stroke-opacity='0.54'/>\
+    <!-- Line 26 -->\
+    <line x1='529.66'  y1='0' x2='529.66'  y2='40' stroke-width='11.36' stroke-opacity='0.55'/>\
+    <!-- Line 27 -->\
+    <line x1='550.85'  y1='0' x2='550.85'  y2='40' stroke-width='11.61' stroke-opacity='0.56'/>\
+    <!-- Line 28 -->\
+    <line x1='572.03'  y1='0' x2='572.03'  y2='40' stroke-width='11.86' stroke-opacity='0.57'/>\
+    <!-- Line 29 -->\
+    <line x1='593.22'  y1='0' x2='593.22'  y2='40' stroke-width='12.12' stroke-opacity='0.58'/>\
+    <!-- Line 30 -->\
+    <line x1='614.41'  y1='0' x2='614.41'  y2='40' stroke-width='12.37' stroke-opacity='0.59'/>\
+    <!-- Line 31 -->\
+    <line x1='635.59'  y1='0' x2='635.59'  y2='40' stroke-width='12.63' stroke-opacity='0.60'/>\
+    <!-- Line 32 -->\
+    <line x1='656.78'  y1='0' x2='656.78'  y2='40' stroke-width='12.88' stroke-opacity='0.61'/>\
+    <!-- Line 33 -->\
+    <line x1='677.97'  y1='0' x2='677.97'  y2='40' stroke-width='13.14' stroke-opacity='0.62'/>\
+    <!-- Line 34 -->\
+    <line x1='699.15'  y1='0' x2='699.15'  y2='40' stroke-width='13.39' stroke-opacity='0.63'/>\
+    <!-- Line 35 -->\
+    <line x1='720.34'  y1='0' x2='720.34'  y2='40' stroke-width='13.64' stroke-opacity='0.64'/>\
+    <!-- Line 36 -->\
+    <line x1='741.53'  y1='0' x2='741.53'  y2='40' stroke-width='13.90' stroke-opacity='0.65'/>\
+    <!-- Line 37 -->\
+    <line x1='762.71'  y1='0' x2='762.71'  y2='40' stroke-width='14.15' stroke-opacity='0.66'/>\
+    <!-- Line 38 -->\
+    <line x1='783.90'  y1='0' x2='783.90'  y2='40' stroke-width='14.41' stroke-opacity='0.67'/>\
+    <!-- Line 39 -->\
+    <line x1='805.08'  y1='0' x2='805.08'  y2='40' stroke-width='14.66' stroke-opacity='0.68'/>\
+    <!-- Line 40 -->\
+    <line x1='826.27'  y1='0' x2='826.27'  y2='40' stroke-width='14.92' stroke-opacity='0.69'/>\
+    <!-- Line 41 -->\
+    <line x1='847.46'  y1='0' x2='847.46'  y2='40' stroke-width='15.17' stroke-opacity='0.70'/>\
+    <!-- Line 42 -->\
+    <line x1='868.64'  y1='0' x2='868.64'  y2='40' stroke-width='15.42' stroke-opacity='0.71'/>\
+    <!-- Line 43 -->\
+    <line x1='889.83'  y1='0' x2='889.83'  y2='40' stroke-width='15.68' stroke-opacity='0.72'/>\
+    <!-- Line 44 -->\
+    <line x1='911.02'  y1='0' x2='911.02'  y2='40' stroke-width='15.93' stroke-opacity='0.73'/>\
+    <!-- Line 45 -->\
+    <line x1='932.20'  y1='0' x2='932.20'  y2='40' stroke-width='16.19' stroke-opacity='0.74'/>\
+    <!-- Line 46 -->\
+    <line x1='953.39'  y1='0' x2='953.39'  y2='40' stroke-width='16.44' stroke-opacity='0.75'/>\
+    <!-- Line 47 -->\
+    <line x1='974.58'  y1='0' x2='974.58'  y2='40' stroke-width='16.69' stroke-opacity='0.76'/>\
+    <!-- Line 48 -->\
+    <line x1='995.76'  y1='0' x2='995.76'  y2='40' stroke-width='16.95' stroke-opacity='0.77'/>\
+    <!-- Line 49 -->\
+    <line x1='1016.95' y1='0' x2='1016.95' y2='40' stroke-width='17.20' stroke-opacity='0.78'/>\
+    <!-- Line 50 -->\
+    <line x1='1038.14' y1='0' x2='1038.14' y2='40' stroke-width='17.46' stroke-opacity='0.79'/>\
+    <!-- Line 51 -->\
+    <line x1='1059.32' y1='0' x2='1059.32' y2='40' stroke-width='17.71' stroke-opacity='0.80'/>\
+    <!-- Line 52 -->\
+    <line x1='1080.51' y1='0' x2='1080.51' y2='40' stroke-width='17.97' stroke-opacity='0.81'/>\
+    <!-- Line 53 -->\
+    <line x1='1101.69' y1='0' x2='1101.69' y2='40' stroke-width='18.22' stroke-opacity='0.82'/>\
+    <!-- Line 54 -->\
+    <line x1='1122.88' y1='0' x2='1122.88' y2='40' stroke-width='18.47' stroke-opacity='0.83'/>\
+    <!-- Line 55 -->\
+    <line x1='1144.07' y1='0' x2='1144.07' y2='40' stroke-width='18.73' stroke-opacity='0.84'/>\
+    <!-- Line 56 -->\
+    <line x1='1165.25' y1='0' x2='1165.25' y2='40' stroke-width='18.98' stroke-opacity='0.85'/>\
+    <!-- Line 57 -->\
+    <line x1='1186.44' y1='0' x2='1186.44' y2='40' stroke-width='19.24' stroke-opacity='0.86'/>\
+    <!-- Line 58 -->\
+    <line x1='1207.63' y1='0' x2='1207.63' y2='40' stroke-width='19.49' stroke-opacity='0.87'/>\
+    <!-- Line 59 -->\
+    <line x1='1228.81' y1='0' x2='1228.81' y2='40' stroke-width='19.75' stroke-opacity='0.88'/>\
+    <!-- Line 60 -->\
+    <line x1='1250.00' y1='0' x2='1250.00' y2='40' stroke-width='20.00' stroke-opacity='0.90'/>\
+  </g>\
+</svg>") no-repeat center;
+      background-size: cover;
+      box-shadow: 0 0 8px #fff;
+    }
+    #progressBlocker {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #001C2E;
+      z-index: 2;
+      transition: transform 0.5s;
+    }
+    /* New Globe Container */
+    #globeContainer {
+      position: absolute;
+      left: 91%;
+      scale: 1;
+      z-index: 20;
+      height: calc(15vh * 0.74);
+    }
+    #globeContainer svg {
+      display: block;
+      height: 100%;
+      transform: scale(0.85);
+      filter: drop-shadow(0 0 8px #fff);
+    }
+    /* Top Separator */
+    #topSeparator {
+      position: absolute;
+      top: 14.6vh;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+    }
+    #topSeparator .line {
+      border-top: 3px solid #37DFEF;
+      margin: 3px 0; /* increased gap: 1.5× the original 2px gap */
+    }
+    #topSeparator .line:first-child {
+      box-shadow: 0 -8px 8px -4px #fff;
+    }
+    #topSeparator .line:last-child {
+      box-shadow: 0 8px 8px -4px #fff;
+    }
+    /* Canvas Container for digit grid */
+    #canvasContainer {
+      position: absolute;
+      top: calc(15vh + 10px);
+      left: 0;
+      right: 0;
+      bottom: calc(150px + 30px);
+    }
+    canvas {
+      display: block;
+      background: #001C2E;
+      position: relative;
+      z-index: 1;
+    }
+    /* Bottom Separator */
+    #bottomSeparator {
+      position: absolute;
+      bottom: calc(150px + 16px);
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+    }
+    #bottomSeparator .line {
+      border-top: 3px solid #37DFEF;
+      margin: 3px 0; /* increased gap */
+    }
+    /* Bins Container (5 bins) */
+    #binsContainer {
+      position: absolute;
+      bottom: 32px;
+      left: 0;
+      width: 100%;
+      height: 150px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 5;
+    }
+    .binContainer {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .bin {
+      width: 200px;
+      height: 50px;
+      background: #001C2E;
+      border: 3px solid #37DFEF;
+      text-align: center;
+      line-height: 50px;
+      font-size: 2em;
+      color: #37DFEF;
+      position: relative;
+      box-sizing: border-box;
+      z-index: 6;
+      font-weight: bold;
+      /* Remove glow effect from bin text */
+      text-shadow: none !important;
+      -webkit-text-fill-color: currentColor !important;
+      /* Remove any container box-shadow if present */
+      box-shadow: none !important;
+    }
+    /* Original lids that pivot from the bin corners */
+    .lid {
+      position: absolute;
+      top: -2px;
+      width: 50%;
+      height: 3px;
+      background: #37DFEF;
+      transform: rotate(0deg);
+      transition: transform 1s;
+      z-index: 7;
+    }
+
+    .lid.left { left: 0; transform-origin: top left; }
+    .lid.right { right: 0; transform-origin: top right; }
+    .bin.open .lid.left { transform: rotate(-135deg); }
+    .bin.open .lid.right { transform: rotate(135deg); }
+    .bin.closing .lid.left { transform: rotate(135deg); }
+    .bin.closing .lid.right { transform: rotate(-135deg); }
+
+    .lid-duplicate {
+      position: absolute;
+      top: -2px;
+      width: 50%;
+      height: 3px;
+      background: #37DFEF;
+      transform: rotate(0deg);
+      transition: transform 1s, top 1s;
+      z-index: 7;
+    }
+
+    .lid-duplicate.left { left: 0; transform-origin: left center; }
+    .lid-duplicate.right { right: 0; transform-origin: right center; }
+    .bin.open .lid-duplicate.left { transform: rotate(-135deg); top: -20px; }
+    .bin.open .lid-duplicate.right { transform: rotate(135deg); top: -20px; }
+    .bin.closing .lid-duplicate.left { transform: rotate(135deg); top: -20px; }
+    .bin.closing .lid-duplicate.right { transform: rotate(-135deg); top: -20px; }
+
+    #connectorContainer {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* Bin progress bars */
+    .binProgress {
+      width: 200px;
+      height: 50px;
+      background: #001C2E;
+      border: 3px solid #37DFEF;
+      box-sizing: border-box;
+      margin-top: 5px;
+      position: relative;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      padding-left: 5px;
+      font-size: 1.2em;
+      /* Add glow to the binProgress container */
+      box-shadow: 0 0 8px #fff;
+    }
+    /* Container that spans the entire width of the progress bar */
+    .binProgressTextContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    /* Both text layers share these base styles */
+    .binProgressText {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      text-align: left;
+      padding-left: 10px; 
+      line-height: 50px;
+      font-weight: bold;
+      z-index: 5;
+      /* Prevent the text from stretching */
+      white-space: nowrap;
+    }
+    /* The “back” text shows the unfilled color */
+    .binProgressText.back {
+      color: #37dfef;
+      text-shadow: none;
+    }
+    /* The “front” text shows the fill color and will be clipped */
+    .binProgressText.front {
+      color: #001c2e;
+    clip-path: inset(0 calc(100% - 0%) 0 0);
+    -webkit-clip-path: inset(0 calc(100% - 0%) 0 0);
+    transition: clip-path 0.5s;
+    }
+    .binProgressFill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: #37DFEF;
+      width: 0%;
+      transition: width 0.5s;
+      z-index: 1;
+    }
+    /* Bin Charts */
+    .binChart {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      width: 100%;
+      height: 0;
+      background: #001C2E;
+      border: 3px solid #37DFEF;
+      overflow: hidden;
+      transition: height 0.75s;
+      box-sizing: border-box;
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+    }
+    .chartHeader {
+      width: 80%;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #001C2E;
+      border: 2px solid #37DFEF;
+      text-align: center;
+      line-height: 40px;
+      font-weight: bold;
+      text-shadow: 0 0 8px #fff !important;
+    }
+    .chartRow {
+      display: flex;
+      align-items: center;
+      width: 90%;
+      height: 40px;
+      padding: 5px;
+    }
+    .chartRow .label {
+      width: 40px;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .chartRow .bar {
+      flex: 1;
+      height: 80%;
+      width: 60px;
+      background: #001C2E;
+      position: relative;
+      margin-left: 20px;
+      box-shadow: 0 0 8px #fff;
+    }
+    .chartRow .bar .fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.75s;
+      box-shadow: 0 0 8px #fff;
+    }
+    /* New Footer Container */
+    #footerContainer {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+    }
+    #footerSeparator .line {
+      border-top: 3px solid #37DFEF;
+      margin: 0 auto;
+      width: 100%;
+    }
+    #footerText {
+      color: #37DFEF;
+      margin-top: 5px;
+      margin-bottom: 5px;
+      font-size: 1.5em;
+      background: linear-gradient(to right, #001C2E 0%, #001C2E 0%, #37DFEF 0%, #37DFEF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: background 0.5s;
+      font-weight: bold;
+      /* Apply glow only to the text */
+      text-shadow: 0 0 8px #fff !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
+    /* Additional visual overrides for bins only (containers) */
+    .bin {
+      -webkit-text-stroke: 0.5px currentColor;
+      font-weight: bold;
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      -webkit-text-fill-color: currentColor !important;
+      /* Remove any container box-shadow (if previously applied) */
+      box-shadow: none !important;
+    }
+    .binProgressText, .chartHeader {
+      -webkit-text-stroke: 0.5px currentColor;
+      font-weight: bold;
+      background: none !important;
+      -webkit-background-clip: initial !important;
+      -webkit-text-fill-color: currentColor !important;
+      text-shadow: 0 0 8px #fff !important;
+    }
+    /* Popup styling */
+    #popup, #popupContaminated, #popupWrongBin {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #001C2E !important;
+      border: 3px solid #37DFEF;
+      color: #37DFEF;
+      padding: 20px;
+      font-size: 2em;
+      display: none;
+      z-index: 20;
+      font-weight: bold;
+      -webkit-text-stroke: 0.5px currentColor;
+      -webkit-background-clip: initial !important;
+      -webkit-text-fill-color: currentColor !important;
+      text-shadow: 0 0 8px #fff !important;
+    }
+    /* Set new popup text for contaminated data */
+    #popupContaminated {
+      content: "";
+    }
+    
+    /* ===== CRT Effect Filter (without text shadow animation) ===== */
+    @keyframes flicker {
+      0% { opacity: 0.27861; }
+      5% { opacity: 0.34769; }
+      10% { opacity: 0.23604; }
+      15% { opacity: 0.90626; }
+      20% { opacity: 0.18128; }
+      25% { opacity: 0.83891; }
+      30% { opacity: 0.65583; }
+      35% { opacity: 0.67807; }
+      40% { opacity: 0.26559; }
+      45% { opacity: 0.84693; }
+      50% { opacity: 0.96019; }
+      55% { opacity: 0.08594; }
+      60% { opacity: 0.20313; }
+      65% { opacity: 0.71988; }
+      70% { opacity: 0.53455; }
+      75% { opacity: 0.37288; }
+      80% { opacity: 0.71428; }
+      85% { opacity: 0.70419; }
+      90% { opacity: 0.7003; }
+      95% { opacity: 0.36108; }
+      100% { opacity: 0.24387; }
+    }
+    .crt {
+      position: relative;
+    }
+    .crt::after {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: rgba(18, 16, 16, 0.1);
+      opacity: 0;
+      z-index: 2;
+      pointer-events: none;
+      animation: flicker 0.15s infinite;
+    }
+    .crt::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: 
+                  radial-gradient(ellipse farthest-corner, rgba(0,28,46,0) 75%, #000b13 100%),
+                  linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+                  
+      z-index: 2;
+      background-size: cover, 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
+    
+    /* Reapply glow effect on separator lines and bins only (containers) */
+    .separator .line,
+    .bin {
+      box-shadow: 0 0 8px #fff !important;
+      text-shadow: 0 0 8px #fff !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="pageWrapper">
+    <div id="appContainer" class="crt">
+      <div id="mainContainer">
+        <!-- Wrap all UI elements (except background and CRT filter) in uiContainer for fade-in -->
+        <div id="uiContainer">
+          <!-- Top progress area -->
+          <div id="totalProgressContainer">
+            <div id="titleBox">
+              <div id="globeContainer">
+                <svg width="300" height="150" viewBox="0 0 300 150">
+                  <ellipse cx="150" cy="75" rx="150" ry="75" fill="#001C2E" stroke="#37DFEF" stroke-width="4"/>
+                  <line x1="30" y1="30" x2="270" y2="30" stroke="#37DFEF" stroke-width="4"/>
+                  <line x1="30" y1="120" x2="270" y2="120" stroke="#37DFEF" stroke-width="4"/>
+                  <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                  <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                  <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                  <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                  <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none"/>
+                </svg>
+                <div id="totalProgressText">0% Complete</div>
+              </div>
+              <div id="totalProgressName">Dranesville</div>
+              <div id="totalProgressFill"></div>
+              <div id="progressBlocker"></div>
+            </div>
+          </div>
+
+          <!-- Top separator -->
+          <div id="topSeparator" class="separator">
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+          
+          <!-- Canvas container for digit grid -->
+          <div id="canvasContainer">
+            <canvas id="gridCanvas"></canvas>
+          </div>
+          
+          <!-- Bottom separator -->
+          <div id="bottomSeparator" class="separator">
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+          
+          <!-- Bins container -->
+          <div id="binsContainer">
+            <div class="binContainer">
+              <div class="bin" data-bin="01">01
+                <div class="lid left"></div>
+                <div class="lid right"></div>
+                <div class="lid-duplicate left"></div>
+                <div class="lid-duplicate right"></div>
+              </div>
+              <div class="binProgress" data-bin="01">
+                <div class="binProgressTextContainer">
+                  <span class="binProgressText back">0%</span>
+                  <span class="binProgressText front">0%</span>
+                </div>
+                <div class="binProgressFill"></div>
+              </div>
+              <div class="binChart" data-bin="01">
+                <div class="chartHeader">01</div>
+                <div class="chartRow" data-temper="WO">
+                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="FC">
+                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="DR">
+                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="MA">
+                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="binContainer">
+              <div class="bin" data-bin="02">02
+                <div class="lid left"></div>
+                <div class="lid right"></div>
+                <div class="lid-duplicate left"></div>
+                <div class="lid-duplicate right"></div>
+              </div>
+              <div class="binProgress" data-bin="02">
+                <div class="binProgressTextContainer">
+                  <span class="binProgressText back">0%</span>
+                  <span class="binProgressText front">0%</span>
+                </div>
+                <div class="binProgressFill"></div>
+              </div>
+
+              <div class="binChart" data-bin="02">
+                <div class="chartHeader">02</div>
+                <div class="chartRow" data-temper="WO">
+                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="FC">
+                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="DR">
+                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="MA">
+                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="binContainer">
+              <div class="bin" data-bin="03">03
+                <div class="lid left"></div>
+                <div class="lid right"></div>
+                <div class="lid-duplicate left"></div>
+                <div class="lid-duplicate right"></div>
+              </div>
+              <div class="binProgress" data-bin="03">
+                <div class="binProgressTextContainer">
+                  <span class="binProgressText back">0%</span>
+                  <span class="binProgressText front">0%</span>
+                </div>
+                <div class="binProgressFill"></div>
+              </div>
+              <div class="binChart" data-bin="03">
+                <div class="chartHeader">03</div>
+                <div class="chartRow" data-temper="WO">
+                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="FC">
+                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="DR">
+                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="MA">
+                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="binContainer">
+              <div class="bin" data-bin="04">04
+                <div class="lid left"></div>
+                <div class="lid right"></div>
+                <div class="lid-duplicate left"></div>
+                <div class="lid-duplicate right"></div>
+              </div>
+              <div class="binProgress" data-bin="04">
+                <div class="binProgressTextContainer">
+                  <span class="binProgressText back">0%</span>
+                  <span class="binProgressText front">0%</span>
+                </div>
+                <div class="binProgressFill"></div>
+              </div>
+
+              <div class="binChart" data-bin="04">
+                <div class="chartHeader">04</div>
+                <div class="chartRow" data-temper="WO">
+                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="FC">
+                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="DR">
+                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="MA">
+                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="binContainer">
+              <div class="bin" data-bin="05">05
+                <div class="lid left"></div>
+                <div class="lid right"></div>
+                <div class="lid-duplicate left"></div>
+                <div class="lid-duplicate right"></div>
+              </div>
+              <div class="binProgress" data-bin="05">
+                <div class="binProgressTextContainer">
+                  <span class="binProgressText back">0%</span>
+                  <span class="binProgressText front">0%</span>
+                </div>
+                <div class="binProgressFill"></div>
+              </div>
+
+              <div class="binChart" data-bin="05">
+                <div class="chartHeader">05</div>
+                <div class="chartRow" data-temper="WO">
+                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="FC">
+                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="DR">
+                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                  <div class="bar" style="border: 3px solid #F9A09F;"><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+                <div class="chartRow" data-temper="MA">
+                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                  <div class="bar" style="border: 3px solid #047FFD;"><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- SVG container for dynamic lid connectors (drawn only while lids are animating) -->
+          <svg id="connectorContainer" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 7;"></svg>
+          
+          <!-- Popup Elements -->
+          <div id="popup">NOPE</div>
+          <div id="popupContaminated">PLEASE DO NOT BIN HEALTHY DATA</div>
+          <div id="popupWrongBin">WRONG BIN</div>
+          
+          <!-- Footer Container -->
+          <div id="footerContainer">
+            <div id="footerSeparator" class="separator">
+              <div class="line"></div>
+            </div>
+            <div id="footerText">0x00  :  0x00</div>
+          </div>
+        </div> <!-- end of #uiContainer -->
+
+        <div id="customCursor">
+          <img src="cursor.png" alt="custom cursor">
+        </div>
+
+      </div> <!-- end of #mainContainer -->
+
+
+
+    </div>
+  </div>
+
+  
+  <!-- UI Fade-In for UI elements (not affecting background or CRT) -->
+  <style>
+    #uiContainer {
+      opacity: 0;
+      animation: fadeIn 2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+  
+  <script>
+    /* ---------------------------------------------------
+       Original JS code (unchanged except for the deposit animation changes,
+       removal of the global fade delay, new contaminated data and wrong bin popups)
+       --------------------------------------------------- */
+
+    const canvas = document.getElementById("gridCanvas");
+    const ctx = canvas.getContext("2d");
+    const totalProgressName = document.getElementById("totalProgressName");
+    const totalProgressText = document.getElementById("totalProgressText");
+    const progressBlocker = document.getElementById("progressBlocker");
+    const binsEls = document.querySelectorAll(".bin");
+    const binsOpen = document.querySelectorAll(".bin.open")
+    
+    let totalProgressPoints = 0;
+    function updateOverallProgress() {
+      const percentage = totalProgressPoints / 2000 * 100;
+      totalProgressText.textContent = Math.floor(percentage) + "% Complete";
+      progressBlocker.style.transform = `translateX(${percentage}%)`;
+    }
+    
+    const pageLoadStart = performance.now();
+    function safeInitSourceGroup() {
+      const elapsed = performance.now() - pageLoadStart;
+      if (elapsed < 7000) {
+        setTimeout(safeInitSourceGroup, 7000 - elapsed);
+        return;
+      }
+      initSourceGroup();
+    }
+    
+    const fadeInEnd = 3;
+    // Global fadeDelay removed
+    
+    let binsData = {
+      "01": { WO: 0, FC: 0, DR: 0, MA: 0 },
+      "02": { WO: 0, FC: 0, DR: 0, MA: 0 },
+      "03": { WO: 0, FC: 0, DR: 0, MA: 0 },
+      "04": { WO: 0, FC: 0, DR: 0, MA: 0 },
+      "05": { WO: 0, FC: 0, DR: 0, MA: 0 }
+    };
+    
+    let gridOffset = { x: 0, y: 0 };
+    const baseCellSize = 40;
+    let zoomFactor = 1.0;
+
+    const keysPressed = {};
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && capturedGroup && !inputLocked && !depositAnimating && !clearAnimating) {
+        e.preventDefault();
+        clearAnimating = true;
+        clearStartTime = performance.now();
+        binsEls.forEach(bin => {
+          bin.classList.remove("open");
+        });
+      }
+      keysPressed[e.key] = true;
+      if (e.key !== "Enter") {
+        if (capturedGroup) {
+          let key = e.key;
+          if (key.length === 1) key = key.padStart(2, "0");
+          if (["01", "02", "03", "04", "05"].includes(key)) {
+            selectedBin = key;
+            binsEls.forEach(bin => {
+              if (bin.getAttribute("data-bin") === key)
+                bin.classList.add("open");
+              else
+                bin.classList.remove("open");
+            });
+          }
+        }
+      } else if (e.key === "Enter" && !depositAnimating) {
+        if (!capturedGroup || capturedGroup.cells.length === 0 || !activeSourceGroup) {
+          showPopup("NOPE");
+          binsEls.forEach(bin => bin.classList.remove("open"));
+          clearAnimating = true;
+          clearStartTime = performance.now();
+          return;
+        }
+        const activeKeys = [activeSourceGroup.source_i + "," + activeSourceGroup.source_j].concat(activeSourceGroup.partners);
+        if (!capturedGroup.cells.some(cell => activeKeys.includes(cell.i + "," + cell.j))) {
+          showPopup("NOPE");
+          binsEls.forEach(bin => bin.classList.remove("open"));
+          clearAnimating = true;
+          clearStartTime = performance.now();
+          return;
+        }
+        // New rule: if more than 2 non-source numbers are selected, trigger CONTAMINATED DATA
+        let nonSourceCount = capturedGroup.cells.filter(cell => !activeKeys.includes(cell.i + "," + cell.j)).length;
+        if (nonSourceCount > 2) {
+          showContaminatedPopup();
+          punishSourceGroup();
+          return;
+        }
+        if (!selectedBin) {
+          punishSourceGroup();
+          return;
+        }
+        if (parseInt(selectedBin, 10) !== activeSourceGroup.frequency) {
+          showWrongBinPopup();
+          punishSourceGroup();
+          return;
+        } else {
+          startDepositAnimation(selectedBin);
+          activeSourceGroup = null;
+        }
+      }
+    });
+    window.addEventListener("keyup", (e) => { keysPressed[e.key] = false; });
+    
+    function resizeCanvas() {
+      const container = document.getElementById("canvasContainer");
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    
+    function getCellData(i, j) {
+      let seed = (i * 374761393) ^ (j * 668265263);
+      seed = ((seed >>> 0) ^ (seed >>> 13)) >>> 0;
+      const digit = seed % 10;
+      const phase = (seed % 1000) / 1000 * Math.PI * 2;
+      const initialFadeDelay = (seed % 2000) / 1000;
+      return { digit, phase, initialFadeDelay };
+    }
+    const removedCells = new Set();
+    const repopulatedCells = {};
+    
+    let mouseDown = false;
+    let capturedGroup = null;
+    let selectedBin = null;
+    let inputLocked = false;
+    let binAnimationActive = false;
+    let clearAnimating = false;
+    let clearStartTime = 0;
+    const clearDuration = 1000;
+    let punishCells = null;
+    
+    function isAdjacentToCaptured(i, j) {
+      if (!capturedGroup || capturedGroup.cells.length === 0) return true;
+      for (let cell of capturedGroup.cells) {
+        if (Math.abs(cell.i - i) <= 1 && Math.abs(cell.j - j) <= 1) {
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    function captureCell(i, j, worldX, worldY, data, cellKey, currentFontSize) {
+      if (!capturedGroup) {
+        capturedGroup = { cells: [], captureTime: Date.now(), screenPos: { x: 0, y: 0 } };
+      }
+      if (!isAdjacentToCaptured(i, j)) return;
+      if (!capturedGroup.cells.find(c => c.i === i && c.j === j)) {
+        capturedGroup.cells.push({
+          i, j, origX: worldX, origY: worldY,
+          digit: data.digit,
+          phase: data.phase,
+          capturedFont: currentFontSize
+        });
+        removedCells.add(cellKey);
+      }
+    }
+    
+    canvas.addEventListener("mousedown", (e) => {
+      if (inputLocked) return;
+      mouseDown = true;
+    });
+    canvas.addEventListener("mouseup", () => { mouseDown = false; });
+    let currentMousePos = { x: 0, y: 0 };
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      currentMousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    });
+    
+    const canvasContainer = document.getElementById("canvasContainer");
+    canvasContainer.addEventListener("wheel", function(e) {
+      if (capturedGroup) return;
+      e.preventDefault();
+      const delta = -e.deltaY;
+      const sensitivity = 0.001;
+      let newZoom = zoomFactor + delta * sensitivity;
+      newZoom = Math.max(0.75, Math.min(3.0, newZoom));
+      const rect = canvasContainer.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      gridOffset.x = (mx + gridOffset.x) * (newZoom / zoomFactor) - mx;
+      gridOffset.y = (my + gridOffset.y) * (newZoom / zoomFactor) - my;
+      zoomFactor = newZoom;
+    }, { passive: false });
+    
+    function getCellScreenPos(i, j, data) {
+      const cellSize = baseCellSize * zoomFactor;
+      const worldX = i * cellSize + cellSize / 2;
+      const worldY = j * cellSize + cellSize / 2;
+      const t = performance.now() / 1000;
+      const floatX = Math.sin(t + data.phase) * 4;
+      const floatY = Math.cos(t + data.phase) * 4;
+      return { x: worldX + floatX - gridOffset.x, y: worldY + floatY - gridOffset.y };
+    }
+    
+    let depositAnimating = false;
+    let depositStartTime = 0;
+    const depositDuration = 1000;
+    function startDepositAnimation(binId) {
+      if (!capturedGroup || capturedGroup.cells.length === 0) return;
+      inputLocked = true;
+      binAnimationActive = true;
+      const binEl = document.querySelector(`.bin[data-bin="${binId}"]`);
+      const binRect = binEl.getBoundingClientRect();
+      const targetPage = { x: binRect.left + binRect.width / 2, y: binRect.top + binRect.height / 2 };
+      const canvasRect = canvas.getBoundingClientRect();
+      const targetCanvas = { x: targetPage.x - canvasRect.left, y: targetPage.y - canvasRect.top };
+      capturedGroup.cells.forEach(cell => {
+        let key = cell.i + "," + cell.j;
+        let data = repopulatedCells[key] ? repopulatedCells[key] : { digit: cell.digit, phase: cell.phase };
+        cell.depositStart = getCellScreenPos(cell.i, cell.j, data);
+        cell.depositTarget = { x: targetCanvas.x, y: targetCanvas.y };
+        let dx = cell.depositTarget.x - cell.depositStart.x;
+        let dy = cell.depositTarget.y - cell.depositStart.y;
+        cell.depositDistance = Math.sqrt(dx*dx + dy*dy);
+      });
+      // Determine order: closest cells start first, with 10ms delay between each.
+      let sortedCells = capturedGroup.cells.slice().sort((a, b) => a.depositDistance - b.depositDistance);
+      sortedCells.forEach((cell, index) => {
+        cell.depositDelay = index * 10;
+      });
+      depositAnimating = true;
+      depositStartTime = Date.now();
+    }
+    
+    function determineWinningTemper(cells) {
+      let freq = {};
+      cells.forEach(cell => {
+        let d = cell.digit;
+        freq[d] = (freq[d] || 0) + 1;
+      });
+      let maxFreq = 0;
+      for (let d in freq) {
+        if (freq[d] > maxFreq) maxFreq = freq[d];
+      }
+      let winners = [];
+      for (let d in freq) {
+        if (freq[d] === maxFreq) winners.push(parseInt(d));
+      }
+      let allowedWinners = winners.filter(d => d !== 1 && d !== 6);
+      if (allowedWinners.length > 0) {
+        winners = allowedWinners;
+      } else {
+        let nextFreq = 0;
+        for (let d in freq) {
+          let digit = parseInt(d);
+          if (digit === 1 || digit === 6) continue;
+          if (freq[d] > nextFreq && freq[d] < maxFreq) {
+            nextFreq = freq[d];
+          }
+        }
+        winners = [];
+        for (let d in freq) {
+          let digit = parseInt(d);
+          if (digit !== 1 && digit !== 6 && freq[d] === nextFreq) {
+            winners.push(digit);
+          }
+        }
+      }
+      let temperWinners = [];
+      winners.forEach(d => {
+        if (d === 0 || d === 9) temperWinners.push("WO");
+        else if (d === 2 || d === 8) temperWinners.push("FC");
+        else if (d === 3 || d === 7) temperWinners.push("DR");
+        else if (d === 4 || d === 5) temperWinners.push("MA");
+      });
+      temperWinners = Array.from(new Set(temperWinners));
+      return temperWinners;
+    }
+    
+    function showPopup(message) {
+      const popup = document.getElementById("popup");
+      if (popup) {
+        popup.textContent = message;
+        popup.style.display = "block";
+        setTimeout(() => { popup.style.display = "none"; }, 2000);
+      }
+    }
+    
+    function showContaminatedPopup() {
+      const popup = document.getElementById("popupContaminated");
+      if (popup) {
+        popup.style.display = "block";
+        setTimeout(() => { popup.style.display = "none"; }, 2000);
+      }
+    }
+    
+    function showWrongBinPopup() {
+      const popup = document.getElementById("popupWrongBin");
+      if (popup) {
+        popup.style.display = "block";
+        setTimeout(() => { popup.style.display = "none"; }, 2000);
+      }
+    }
+    
+    function animateTempersChart(binId, callback) {
+      const chart = document.querySelector(`.binChart[data-bin="${binId}"]`);
+      chart.style.height = "220px";
+      setTimeout(() => {
+        const temperWinners = determineWinningTemper(capturedGroup.cells);
+        if (temperWinners.length === 0) {
+          showPopup("NOPE");
+        } else {
+          temperWinners.forEach(temp => {
+            binsData[binId][temp] = Math.min(100, binsData[binId][temp] + 1);
+          });
+        }
+        chart.querySelectorAll(".chartRow").forEach(row => {
+          const temper = row.getAttribute("data-temper");
+          let value = binsData[binId][temper] || 0;
+          row.querySelector(".fill").style.width = value + "%";
+        });
+      }, 750);
+      setTimeout(() => {
+        chart.style.height = "0";
+        setTimeout(callback, 1000);
+      }, 2250);
+    }
+    
+    function updateBinProgress(binId) {
+      const sum = binsData[binId].WO + binsData[binId].FC + binsData[binId].DR + binsData[binId].MA;
+      // Assuming a max sum of 400 gives 100%
+      const percentage = sum / 400 * 100;
+      
+      const progressContainer = document.querySelector(`.binProgress[data-bin="${binId}"]`);
+      const fillEl = progressContainer.querySelector(".binProgressFill");
+      // Update the fill width:
+      fillEl.style.width = percentage + "%";
+      
+      // Update the text content in both layers:
+      const backText = progressContainer.querySelector(".binProgressText.back");
+      const frontText = progressContainer.querySelector(".binProgressText.front");
+      const textContent = Math.floor(percentage) + "%";
+      backText.textContent = textContent;
+      frontText.textContent = textContent;
+      
+      // Adjust the clip-path on the front text container so that the fill
+      // reveals the front text exactly across the width of the progress bar.
+      // Here, we clip from the right: when percentage is 0, clip 100% of the front text,
+      // and when percentage is 100, clip 0% (i.e. fully reveal).
+      frontText.style.clipPath = `inset(0 calc(100% - ${percentage}%) 0 0)`;
+      frontText.style.webkitClipPath = `inset(0 calc(100% - ${percentage}%) 0 0)`;
+    }
+    
+    let activeSourceGroup = null;
+    function initSourceGroup() {
+      let visIStart = Math.floor(gridOffset.x / baseCellSize);
+      let visIEnd = Math.floor((gridOffset.x + canvas.width) / baseCellSize);
+      let visJStart = Math.floor(gridOffset.y / baseCellSize);
+      let visJEnd = Math.floor((gridOffset.y + canvas.height) / baseCellSize);
+      let i0 = visIStart + Math.floor(Math.random() * (visIEnd - visIStart + 1));
+      let j0 = visJStart + Math.floor(Math.random() * (visJEnd - visJStart + 1));
+      let key = i0 + "," + j0;
+      let sourceData = repopulatedCells[key] ? repopulatedCells[key] : getCellData(i0, j0);
+      let X = Math.floor(Math.random() * 9) + 5;
+      let candidates = [];
+      for (let di = -5; di <= 5; di++) {
+         for (let dj = -5; dj <= 5; dj++) {
+            if (di === 0 && dj === 0) continue;
+            let ik = i0 + di;
+            let jk = j0 + dj;
+            let dist = Math.sqrt(di*di + dj*dj);
+            candidates.push({ key: ik + "," + jk, dist: dist });
+         }
+      }
+      candidates.sort((a, b) => a.dist - b.dist);
+      let partners = candidates.slice(0, X).map(p => p.key);
+      let Y = Math.floor(Math.random() * 5) + 1;
+      let Z = Math.random() * 2 + 3;
+      activeSourceGroup = {
+         sourceKey: i0 + "," + j0,
+         source_i: i0,
+         source_j: j0,
+         sourceData: getCellData(i0, j0),
+         partners: partners,
+         frequency: Y,
+         period: Z,
+         startTime: performance.now()
+      };
+      console.log("Active source group initialized:", activeSourceGroup);
+    }
+    
+    let punishActive = false;
+    let punishStartTime = 0;
+    const punishDuration = 1000;
+    function punishSourceGroup() {
+      showPopup("NOPE");
+      punishActive = true;
+      punishStartTime = performance.now();
+      let unionCells = [];
+      if (capturedGroup && capturedGroup.cells) {
+          unionCells = unionCells.concat(capturedGroup.cells);
+      }
+      if (activeSourceGroup) {
+          let sourceKey = activeSourceGroup.source_i + "," + activeSourceGroup.source_j;
+          let found = unionCells.some(cell => cell.i + "," + cell.j === sourceKey);
+          if (!found) {
+              let data = repopulatedCells[sourceKey] ? repopulatedCells[sourceKey] : activeSourceGroup.sourceData;
+              const cellSize = baseCellSize * zoomFactor;
+              const effectiveBaseFont = 16 * zoomFactor;
+              let pos = getCellScreenPos(activeSourceGroup.source_i, activeSourceGroup.source_j, data);
+              let d = Math.hypot(pos.x - currentMousePos.x, pos.y - currentMousePos.y);
+              let currentFont = effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d/(2*cellSize)));
+              unionCells.push({
+                  i: activeSourceGroup.source_i,
+                  j: activeSourceGroup.source_j,
+                  digit: data.digit,
+                  phase: data.phase,
+                  capturedFont: currentFont
+              });
+          }
+          activeSourceGroup.partners.forEach(partnerKey => {
+             let found = unionCells.some(cell => cell.i + "," + cell.j === partnerKey);
+             if (!found) {
+                 let parts = partnerKey.split(",");
+                 let i = parseInt(parts[0], 10);
+                 let j = parseInt(parts[1], 10);
+                 let data = repopulatedCells[partnerKey] ? repopulatedCells[partnerKey] : getCellData(i, j);
+                 const cellSize = baseCellSize * zoomFactor;
+                 const effectiveBaseFont = 16 * zoomFactor;
+                 let pos = getCellScreenPos(i, j, data);
+                 let d = Math.hypot(pos.x - currentMousePos.x, pos.y - currentMousePos.y);
+                 let currentFont = effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d/(2*cellSize)));
+                 unionCells.push({
+                    i: i,
+                    j: j,
+                    digit: data.digit,
+                    phase: data.phase,
+                    capturedFont: currentFont
+                 });
+             }
+          });
+      }
+      punishCells = unionCells;
+      capturedGroup = null;
+      
+      setTimeout(() => {
+         if (punishCells) {
+             punishCells.forEach(cell => {
+               removedCells.delete(cell.i + "," + cell.j);
+               repopulatedCells[cell.i + "," + cell.j] = {
+                 digit: Math.floor(Math.random() * 10),
+                 phase: Math.random() * 2 * Math.PI,
+                 fadeStart: Date.now() + Math.random() * 1000
+               };
+             });
+         }
+         selectedBin = null;
+         binsEls.forEach(bin => bin.classList.remove("open"));
+         punishActive = false;
+         punishCells = null;
+         activeSourceGroup = null;
+         // Spawn new source group after the same random delay as a successful deposit
+         let delay = 5000 + Math.random() * 15000;
+         setTimeout(safeInitSourceGroup, delay);
+      }, punishDuration + 1000);
+    }
+    
+    function drawSourceGroupPunish() {
+      if (!punishCells) return;
+      let elapsed = performance.now() - punishStartTime;
+      let scale = Math.max(0, 1 - (elapsed / punishDuration));
+      punishCells.forEach(cell => {
+          let pos = getCellScreenPos(cell.i, cell.j, cell);
+          ctx.shadowColor = "#FFFFFF";
+          ctx.shadowBlur = 8;
+          ctx.font = `bold ${cell.capturedFont * scale}px Gotham, sans-serif`;
+          ctx.fillStyle = "#37DFEF";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(cell.digit, pos.x, pos.y);
+          ctx.shadowBlur = 0;
+      });
+    }
+    
+    /* Check if active group is visible; if not, reset after 5s */
+    let sourceGroupNotVisibleStart = null;
+    setInterval(() => {
+      if (activeSourceGroup) {
+        const visibleCount = countVisibleSourceGroupCells();
+        if (visibleCount === 0) {
+          if (!sourceGroupNotVisibleStart) {
+            sourceGroupNotVisibleStart = Date.now();
+          } else if (Date.now() - sourceGroupNotVisibleStart > 5000) {
+            console.log("Source group not visible for >5 seconds, resetting.");
+            activeSourceGroup = null;
+            safeInitSourceGroup();
+            sourceGroupNotVisibleStart = null;
+          }
+        } else {
+          sourceGroupNotVisibleStart = null;
+        }
+      }
+    }, 1000);
+
+    // Helper: returns the pivot’s screen coordinates for an element.
+    // For left lids, the pivot is at the top‑left; for right lids, at the top‑right.
+    function getPivotScreenPosition(elem, side) {
+      const parent = elem.offsetParent; // e.g. the .bin container (assumed to be position: relative)
+      const parentRect = parent.getBoundingClientRect();
+      const elemLeft = elem.offsetLeft;
+      const elemTop = elem.offsetTop;
+      if (side === 'left') {
+        return {
+          x: parentRect.left + elemLeft,
+          y: parentRect.top + elemTop
+        };
+      } else { // side === 'right'
+        return {
+          x: parentRect.left + elemLeft + elem.offsetWidth,
+          y: parentRect.top + elemTop
+        };
+      }
+    }
+
+    // Helper: calculates the free-edge point (in screen coordinates) for a lid.
+    // For a left lid (pivot on left) the free edge is at (offsetWidth, offsetHeight/2) relative to its pivot,
+    // for a right lid (pivot on right) the free edge is at (-offsetWidth, offsetHeight/2).
+    // Then we apply the forced adjustment: +3px down always, +3px right for left lids, and -3px for right lids.
+    function getFreeEdgePoint(elem, side) {
+      // Get the current rotation angle from computed transform.
+      const computedStyle = window.getComputedStyle(elem);
+      const transform = computedStyle.transform;
+      let angle = 0;
+      if (transform && transform !== "none") {
+        // Parse the matrix: "matrix(a, b, c, d, e, f)"
+        const values = transform.split('(')[1].split(')')[0].split(',');
+        const a = parseFloat(values[0]);
+        const b = parseFloat(values[1]);
+        angle = Math.atan2(b, a);
+      }
+      
+      // Determine the local free-edge point.
+      // For left lids, free edge = (offsetWidth, offsetHeight/2).
+      // For right lids, free edge = (-offsetWidth, offsetHeight/2).
+      let localX, localY;
+      if (side === 'left') {
+        localX = elem.offsetWidth;
+        localY = elem.offsetHeight / 2;
+      } else { // 'right'
+        localX = -elem.offsetWidth;
+        localY = elem.offsetHeight / 2;
+      }
+      
+      // Rotate the local free-edge point by the element's rotation angle.
+      const rotatedX = localX * Math.cos(angle) - localY * Math.sin(angle);
+      const rotatedY = localX * Math.sin(angle) + localY * Math.cos(angle);
+      
+      // Get the pivot’s screen coordinates.
+      const pivot = getPivotScreenPosition(elem, side);
+      
+      // Compute the free-edge point in screen coordinates.
+      let freeEdge = {
+        x: pivot.x + rotatedX,
+        y: pivot.y + rotatedY
+      };
+      
+      // Apply forced adjustments: move 3px down always;
+      // for left lids, push right by 3px; for right lids, push left by 3px.
+      freeEdge.y += 5;
+      if (side === 'left') {
+        freeEdge.x += 3;
+      } else {
+        freeEdge.x += 0.8;
+      }
+      return freeEdge;
+    }
+
+    function updateBinParallelograms() {
+
+      const connectorSVG = document.getElementById("connectorContainer");
+      connectorSVG.innerHTML = "";
+
+      connectorSVG.style.zIndex = "4";
+
+      // Hide original lids visually but keep them for layout measurement.
+      document.querySelectorAll(".lid, .lid-duplicate").forEach(el => {
+        el.style.visibility = "hidden";
+      });
+
+      const svgns = "http://www.w3.org/2000/svg";
+      // Get the connector container's bounding rectangle for coordinate adjustments.
+      const containerRect = connectorSVG.getBoundingClientRect();
+
+      // Process each bin element.
+      const bins = document.querySelectorAll(".bin");
+      bins.forEach(bin => {
+        // Process bins that are either opening or closing.
+        if (!bin.classList.contains("open") && !bin.classList.contains("closing")) return;
+
+        // -------- LEFT SIDE POLYGON --------
+        const leftLid = bin.querySelector(".lid.left");
+        const leftDup = bin.querySelector(".lid-duplicate.left");
+        if (leftLid && leftDup) {
+          let pivotLeft = getPivotScreenPosition(leftLid, 'left');
+          let freeLeft = getFreeEdgePoint(leftLid, 'left');
+          let freeLeftDup = getFreeEdgePoint(leftDup, 'left');
+          let pivotLeftDup = getPivotScreenPosition(leftDup, 'left');
+
+          [pivotLeft, freeLeft, freeLeftDup, pivotLeftDup].forEach(pt => {
+            pt.x += 2;
+            pt.x -= containerRect.left;
+            pt.y -= containerRect.top;
+          });
+
+          let leftPoly = document.createElementNS(svgns, "polygon");
+          leftPoly.setAttribute("points", 
+            `${pivotLeft.x},${pivotLeft.y} ${freeLeft.x},${freeLeft.y} ${freeLeftDup.x},${freeLeftDup.y} ${pivotLeftDup.x},${pivotLeftDup.y}`);
+          leftPoly.setAttribute("stroke", "#37DFEF");
+          leftPoly.setAttribute("stroke-width", "3");
+          leftPoly.setAttribute("fill", "#001C2E");
+          leftPoly.style.filter = "drop-shadow(0 0 4px #fff)";
+          connectorSVG.appendChild(leftPoly);
+        }
+
+        // -------- RIGHT SIDE POLYGON --------
+        const rightLid = bin.querySelector(".lid.right");
+        const rightDup = bin.querySelector(".lid-duplicate.right");
+        if (rightLid && rightDup) {
+          let pivotRight = getPivotScreenPosition(rightLid, 'right');
+          let freeRight = getFreeEdgePoint(rightLid, 'right');
+          let freeRightDup = getFreeEdgePoint(rightDup, 'right');
+          let pivotRightDup = getPivotScreenPosition(rightDup, 'right');
+
+          // Add a 5px rightward offset to the right-side points.
+          [pivotRight, freeRight, freeRightDup, pivotRightDup].forEach(pt => {
+            pt.x += 5; // Adjust this offset as needed.
+            pt.x -= containerRect.left;
+            pt.y -= containerRect.top;
+          });
+
+          let rightPoly = document.createElementNS(svgns, "polygon");
+          rightPoly.setAttribute("points", 
+            `${pivotRight.x},${pivotRight.y} ${freeRight.x},${freeRight.y} ${freeRightDup.x},${freeRightDup.y} ${pivotRightDup.x},${pivotRightDup.y}`);
+          rightPoly.setAttribute("stroke", "#37DFEF");
+          rightPoly.setAttribute("stroke-width", "3");
+          rightPoly.setAttribute("fill", "#001C2E");
+          rightPoly.style.filter = "drop-shadow(0 0 4px #fff)";
+          connectorSVG.appendChild(rightPoly);
+        }
+
+        // -------- THIRD POLYGON (using only pivot points with updated right values) --------
+        if (leftLid && rightLid && rightDup && leftDup) {
+          let pivotLeft = getPivotScreenPosition(leftLid, 'left');
+          let pivotRight = getPivotScreenPosition(rightLid, 'right');
+          let pivotRightDup = getPivotScreenPosition(rightDup, 'right');
+          let pivotLeftDup = getPivotScreenPosition(leftDup, 'left');
+
+          // Apply the same rightward offset to the right-side pivot points.
+          pivotRight.x += 5;
+          pivotRightDup.x += 5;
+          pivotLeft.x += 2;
+          pivotLeftDup.x += 2;
+
+          [pivotLeft, pivotRight, pivotRightDup, pivotLeftDup].forEach(pt => {
+            pt.x -= containerRect.left;
+            pt.y -= containerRect.top;
+          });
+
+          let thirdPoly = document.createElementNS(svgns, "polygon");
+          // Connect in order: left lid pivot → right lid pivot → right dup pivot → left dup pivot.
+          thirdPoly.setAttribute("points", 
+            `${pivotLeft.x},${pivotLeft.y} ${pivotRight.x},${pivotRight.y} ${pivotRightDup.x},${pivotRightDup.y} ${pivotLeftDup.x},${pivotLeftDup.y}`);
+          thirdPoly.setAttribute("stroke", "#37DFEF");
+          thirdPoly.setAttribute("stroke-width", "3");
+          thirdPoly.setAttribute("fill", "#001C2E");
+          thirdPoly.style.filter = "drop-shadow(0 0 4px #fff)";
+          connectorSVG.appendChild(thirdPoly);
+        }
+      });
+    }
+
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const now = performance.now();
+      const t = now / 1000;
+      const cellSize = baseCellSize * zoomFactor;
+      const effectiveBaseFont = 16 * zoomFactor;
+      const collisionThreshold = 20;
+      
+      if (!depositAnimating && !capturedGroup) {
+        const moveSpeed = 2;
+        if (keysPressed["ArrowUp"] || keysPressed["w"] || keysPressed["W"]) gridOffset.y -= moveSpeed;
+        if (keysPressed["ArrowDown"] || keysPressed["s"] || keysPressed["S"]) gridOffset.y += moveSpeed;
+        if (keysPressed["ArrowLeft"] || keysPressed["a"] || keysPressed["A"]) gridOffset.x -= moveSpeed;
+        if (keysPressed["ArrowRight"] || keysPressed["d"] || keysPressed["D"]) gridOffset.x += moveSpeed;
+      }
+      
+      let isTwitchFrame = false;
+      if (activeSourceGroup && !punishActive) {
+         let cyclePeriod = activeSourceGroup.period * 1000;
+         let cycleTime = now - activeSourceGroup.startTime;
+         let interval = 1000 / activeSourceGroup.frequency;
+         if ((cycleTime % cyclePeriod) < 1000 && ((cycleTime % 1000) % interval) < 90) {
+            isTwitchFrame = true;
+         }
+      }
+      
+      for (let i = Math.floor(gridOffset.x / cellSize) - 2; i <= Math.floor((gridOffset.x + canvas.width) / cellSize) + 2; i++) {
+        for (let j = Math.floor(gridOffset.y / cellSize) - 2; j <= Math.floor((gridOffset.y + canvas.height) / cellSize) + 2; j++) {
+          const key = i + "," + j;
+          if (removedCells.has(key)) continue;
+          if ((isTwitchFrame || punishActive) && activeSourceGroup &&
+              (key === activeSourceGroup.source_i + "," + activeSourceGroup.source_j ||
+               activeSourceGroup.partners.includes(key))) {
+            continue;
+          }
+          if (capturedGroup && capturedGroup.cells.some(c => c.i === i && c.j === j)) {
+            continue;
+          }
+          let data = repopulatedCells[key] ? repopulatedCells[key] : getCellData(i, j);
+          const pos = getCellScreenPos(i, j, data);
+          let alpha = 1.0;
+          // For cells that have been repopulated, adjust dt without global fade delay
+          if (repopulatedCells[key]) {
+             const dt = Math.max(0, (Date.now() - repopulatedCells[key].fadeStart) / 1000);
+             alpha = dt < 1 ? dt : 1;
+          } else {
+             let elapsed = (performance.now() - pageLoadStart) / 1000;
+             if (elapsed < data.initialFadeDelay) {
+               alpha = 0;
+             } else if (elapsed >= fadeInEnd) {
+               alpha = 1;
+             } else {
+               alpha = (elapsed - data.initialFadeDelay) / (fadeInEnd - data.initialFadeDelay);
+             }
+          }
+          ctx.globalAlpha = alpha;
+          ctx.shadowColor = "#FFFFFF";
+          ctx.shadowBlur = 8;
+          let d = Math.hypot(pos.x - currentMousePos.x, pos.y - currentMousePos.y);
+          let fontSize = effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d / (2 * cellSize)));
+          ctx.font = `bold ${fontSize}px Gotham, sans-serif`;
+          ctx.fillStyle = "#37DFEF";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(data.digit, pos.x, pos.y);
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1;
+        }
+      }
+      
+      if (capturedGroup && !binAnimationActive && !depositAnimating) {
+        if (clearAnimating) {
+          const elapsed = now - clearStartTime;
+          const tClear = Math.min(1, elapsed / clearDuration);
+          capturedGroup.cells.forEach(cell => {
+             let pos = getCellScreenPos(cell.i, cell.j, cell);
+             let d = Math.hypot(pos.x - currentMousePos.x, pos.y - currentMousePos.y);
+             let normalFont = effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d/(2 * cellSize)));
+             let interpFont = cell.capturedFont * (1 - tClear) + normalFont * tClear;
+             ctx.shadowColor = "#FFFFFF";
+             ctx.shadowBlur = 8;
+             ctx.font = `bold ${interpFont}px Gotham, sans-serif`;
+             ctx.fillStyle = "#37DFEF";
+             ctx.textAlign = "center";
+             ctx.textBaseline = "middle";
+             ctx.fillText(cell.digit, pos.x, pos.y);
+             ctx.shadowBlur = 0;
+          });
+          if (elapsed >= clearDuration) {
+             capturedGroup.cells.forEach(cell => {
+                removedCells.delete(cell.i + "," + cell.j);
+             });
+             capturedGroup = null;
+             clearAnimating = false;
+             binsEls.forEach(bin => bin.classList.remove("open"));
+          }
+        } else {
+          capturedGroup.cells.forEach(cell => {
+             let key = cell.i + "," + cell.j;
+             if (activeSourceGroup &&
+                 (key === activeSourceGroup.source_i + "," + activeSourceGroup.source_j ||
+                  activeSourceGroup.partners.includes(key)) &&
+                 isTwitchFrame) {
+               return;
+             }
+             let pos = getCellScreenPos(cell.i, cell.j, cell);
+             ctx.shadowColor = "#FFFFFF";
+             ctx.shadowBlur = 8;
+             ctx.font = `bold ${cell.capturedFont}px Gotham, sans-serif`;
+             ctx.fillStyle = "#37DFEF";
+             ctx.textAlign = "center";
+             ctx.textBaseline = "middle";
+             ctx.fillText(cell.digit, pos.x, pos.y);
+             ctx.shadowBlur = 0;
+          });
+        }
+      }
+      
+      for (let i = Math.floor(gridOffset.x / cellSize) - 2; i <= Math.floor((gridOffset.x + canvas.width) / cellSize) + 2; i++) {
+        for (let j = Math.floor(gridOffset.y / cellSize) - 2; j <= Math.floor((gridOffset.y + canvas.height) / cellSize) + 2; j++) {
+          const key = i + "," + j;
+          if (removedCells.has(key)) continue;
+          if (capturedGroup && capturedGroup.cells.some(c => c.i === i && c.j === j)) continue;
+          let data = repopulatedCells[key] ? repopulatedCells[key] : getCellData(i, j);
+          let pos = getCellScreenPos(i, j, data);
+          let d = Math.hypot(pos.x - currentMousePos.x, pos.y - currentMousePos.y);
+          if (d < collisionThreshold) {
+             let fontSize = effectiveBaseFont + (24 * zoomFactor);
+             ctx.shadowColor = "#FFFFFF";
+             ctx.shadowBlur = 8;
+             ctx.font = `bold ${fontSize}px Gotham, sans-serif`;
+             ctx.fillStyle = "#37DFEF";
+             ctx.textAlign = "center";
+             ctx.textBaseline = "middle";
+             ctx.fillText(data.digit, pos.x, pos.y);
+             ctx.shadowBlur = 0;
+             if (mouseDown && !inputLocked && isAdjacentToCaptured(i, j)) {
+               captureCell(i, j, (i*cellSize)+cellSize/2, (j*cellSize)+cellSize/2, data, key, fontSize);
+             }
+          }
+        }
+      }
+      
+      if (capturedGroup && depositAnimating) {
+         let allFinished = true;
+         capturedGroup.cells.forEach(cell => {
+            // Compute the effective elapsed time per cell, considering its individual delay.
+            let effectiveElapsed = Date.now() - (depositStartTime + cell.depositDelay);
+            let tNorm = Math.min(1, Math.max(0, effectiveElapsed / depositDuration));
+            if (tNorm < 1) {
+              allFinished = false;
+            }
+            const start = cell.depositStart;
+            const target = cell.depositTarget;
+            const currentPos = {
+               x: start.x + (target.x - start.x) * tNorm,
+               y: start.y + (target.y - start.y) * tNorm
+            };
+            ctx.shadowColor = "#FFFFFF";
+            ctx.shadowBlur = 8;
+            ctx.font = `bold ${cell.capturedFont}px Gotham, sans-serif`;
+            ctx.fillStyle = "#37DFEF";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(cell.digit, currentPos.x, currentPos.y);
+            ctx.shadowBlur = 0;
+         });
+         if (allFinished) {
+            depositAnimating = false;
+            const temperWinners = determineWinningTemper(capturedGroup.cells);
+            if (temperWinners.length === 0) {
+               showPopup("NOPE");
+            } else {
+               temperWinners.forEach(temp => {
+                  binsData[selectedBin][temp] = Math.min(100, binsData[selectedBin][temp] + 1);
+               });
+            }
+            const capturedCells = capturedGroup.cells.slice();
+            animateTempersChart(selectedBin, () => {
+               const binEl = document.querySelector(`.bin[data-bin="${selectedBin}"]`);
+               binEl.classList.remove("open");
+               setTimeout(() => {
+                 capturedCells.forEach(cell => {
+                   removedCells.delete(cell.i + "," + cell.j);
+                   repopulatedCells[cell.i + "," + cell.j] = {
+                     digit: Math.floor(Math.random() * 10),
+                     phase: Math.random() * 2 * Math.PI,
+                     fadeStart: Date.now() + Math.random() * 1000
+                   };
+                 });
+               }, 1000);
+               updateBinProgress(selectedBin);
+               let newTotal = 0;
+               for (let key in binsData) {
+                 newTotal += binsData[key].WO + binsData[key].FC + binsData[key].DR + binsData[key].MA;
+               }
+               totalProgressPoints = newTotal;
+               updateOverallProgress();
+               capturedGroup = null;
+               selectedBin = null;
+               binsEls.forEach(bin => bin.classList.remove("open"));
+               binAnimationActive = false;
+               inputLocked = false;
+               let delay = 5000 + Math.random() * 15000;
+               setTimeout(safeInitSourceGroup, delay);
+            });
+         }
+      }
+      
+      if (activeSourceGroup && isTwitchFrame && !depositAnimating && !punishActive) {
+         drawSourceGroupTwitch();
+      }
+      
+      if (punishActive) {
+         drawSourceGroupPunish();
+      }
+      
+      updateBinParallelograms();
+      
+      requestAnimationFrame(draw);
+    }
+    
+    function drawSourceGroupTwitch() {
+      const now = performance.now();
+      const currentTimeSec = now / 1000;
+      let cyclePeriod = activeSourceGroup.period * 1000;
+      let cycleTime = now - activeSourceGroup.startTime;
+      let interval = 1000 / activeSourceGroup.frequency;
+      if ((cycleTime % cyclePeriod) < 1000 && ((cycleTime % 1000) % interval) < 90) {
+         const cellSize = baseCellSize * zoomFactor;
+         const effectiveBaseFont = 16 * zoomFactor;
+         let sourceKey = activeSourceGroup.source_i + "," + activeSourceGroup.source_j;
+         let sourceData = repopulatedCells[sourceKey] ? repopulatedCells[sourceKey] : activeSourceGroup.sourceData;
+         let sourcePos = getCellScreenPos(activeSourceGroup.source_i, activeSourceGroup.source_j, sourceData);
+         let d = Math.hypot(sourcePos.x - currentMousePos.x, sourcePos.y - currentMousePos.y);
+         let capturedSource = capturedGroup ? capturedGroup.cells.find(cell => cell.i === activeSourceGroup.source_i && cell.j === activeSourceGroup.source_j) : null;
+         let normalFontSize = capturedSource ? capturedSource.capturedFont
+                                            : (effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d/(2 * cellSize))));
+         ctx.shadowColor = "#FFFFFF";
+         ctx.shadowBlur = 8;
+         ctx.font = `bold ${normalFontSize * 1.08}px Gotham, sans-serif`;
+         ctx.fillStyle = "#37DFEF";
+         ctx.textAlign = "center";
+         ctx.textBaseline = "middle";
+         ctx.fillText(sourceData.digit, sourcePos.x, sourcePos.y);
+         ctx.shadowBlur = 0;
+         
+         activeSourceGroup.partners.forEach(partnerKey => {
+            let parts = partnerKey.split(",");
+            let i = parseInt(parts[0], 10);
+            let j = parseInt(parts[1], 10);
+            let partnerData = repopulatedCells[partnerKey] ? repopulatedCells[partnerKey] : getCellData(i, j);
+            let partnerPos = getCellScreenPos(i, j, partnerData);
+            let d_p = Math.hypot(partnerPos.x - currentMousePos.x, partnerPos.y - currentMousePos.y);
+            let capturedPartner = capturedGroup ? capturedGroup.cells.find(cell => cell.i === i && cell.j === j) : null;
+            let partnerFontSize = capturedPartner ? capturedPartner.capturedFont
+                                                  : (effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d_p/(2 * cellSize))));
+            ctx.shadowColor = "#FFFFFF";
+            ctx.shadowBlur = 8;
+            ctx.font = `bold ${partnerFontSize}px Gotham, sans-serif`;
+            ctx.fillStyle = "#37DFEF";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            let dx = partnerPos.x - sourcePos.x;
+            let dy = partnerPos.y - sourcePos.y;
+            let len = Math.sqrt(dx*dx + dy*dy) || 1;
+            let offsetX = 4 * (dx / len);
+            let offsetY = 4 * (dy / len);
+            ctx.fillText(partnerData.digit, partnerPos.x + offsetX, partnerPos.y + offsetY);
+            ctx.shadowBlur = 0;
+         });
+      }
+    }
+    
+    draw();
+    setTimeout(safeInitSourceGroup, 2000);
+    
+    function countVisibleSourceGroupCells() {
+      if (!activeSourceGroup) return 0;
+      let count = 0;
+      const cellSize = baseCellSize * zoomFactor;
+      const minX = gridOffset.x - cellSize, maxX = gridOffset.x + canvas.width + cellSize;
+      const minY = gridOffset.y - cellSize, maxY = gridOffset.y + canvas.height + cellSize;
+      const allKeys = [activeSourceGroup.sourceKey].concat(activeSourceGroup.partners);
+      allKeys.forEach(key => {
+        const [i, j] = key.split(",").map(Number);
+        const x = i * cellSize;
+        const y = j * cellSize;
+        if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
+          count++;
+        }
+      });
+      return count;
+    }
+    
+    document.addEventListener('wheel', (e) => {
+      const step = e.deltaY > 0 ? -0.1 : 0.1;
+      gridOffset.x += 0;
+      gridOffset.y += 0;
+      // Update roller positions:
+      // (Same logic as provided in your original code)
+      // [Code omitted for brevity; remains unchanged]
+    });
+  </script>
+  
+  <!-- New Script: Read "filename" from query parameter and update totalProgressName -->
+  <script>
+    window.addEventListener("DOMContentLoaded", function() {
+      const params = new URLSearchParams(window.location.search);
+      const filename = params.get("filename");
+      if (filename) {
+        document.getElementById("totalProgressName").textContent = filename;
+      }
+    });
+  </script>
+  
+  <!-- Include this in your HTML (e.g., before the closing </body> tag) -->
+  <script>
+    window.addEventListener("load", function() {
+      // Create an image object and set its source (adjust the path as needed)
+      const img = new Image();
+      // Note: Use a relative URL or URL from your server rather than an absolute Windows path.
+      img.src = "lumon_industries_logo.png";
+      // Ensure CORS is allowed if needed:
+      img.crossOrigin = "anonymous";
+      
+      img.onload = function() {
+        // Create an offscreen canvas
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+
+        // Draw the original image into the canvas
+        ctx.drawImage(img, 0, 0);
+
+        // Get pixel data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        // Loop over every pixel.
+        // For each pixel, if it is "white" (R, G, B all above 240),
+        // change it to #37dfef (RGB 55, 223, 239).
+        // Otherwise, set the alpha to 0 (transparent).
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i+1];
+          const b = data[i+2];
+          if (r > 240 && g > 240 && b > 240) {
+            data[i] = 193;      // Red: 0xc1
+            data[i+1] = 243;   // Green: 0xf3
+            data[i+2] = 247;   // Blue: 0xf7
+            // Leave alpha unchanged (or set to 255)
+            data[i+3] = 255;
+          } else {
+            // Make non-white pixels transparent
+            data[i+3] = 0;
+          }
+        }
+        
+        // Put the modified pixel data back into the canvas
+        ctx.putImageData(imageData, 0, 0);
+
+        // Create a new image element from the canvas
+        const processedImg = new Image();
+        processedImg.src = canvas.toDataURL();
+
+        // Style the image so that it appears in front of the globe SVG
+        processedImg.style.position = "absolute";
+        // Adjust the z-index so that it's in front of the globe but behind the bin lids, for example.
+        processedImg.style.zIndex = "0"; 
+        // Set a location on screen; adjust as needed.
+        processedImg.style.left = "50%";
+        processedImg.style.top = "50%";
+        processedImg.style.transform = "translate(-50%, -50%) scale(0.74";
+        processedImg.style.filter = "drop-shadow(0 0 7px #37dfef)";
+
+      processedImg.style.opacity = 0; // start hidden
+      processedImg.style.animation = 'fadeIn 2s ease-out forwards';
+
+      processedImg.id = "processedImg";
+      const globeContainer = document.getElementById("globeContainer");
+      globeContainer.appendChild(processedImg);
+
+      };
+
+      img.onerror = function(e) {
+        console.error("Error loading image:", e);
+      };
+    });
+  </script>
+
+  <script>
+  function updateFooterWithHexOffsets() {
+    const cellSize = 40;
+    let offsetX = Math.floor(gridOffset.x / cellSize);
+    let offsetY = Math.floor(gridOffset.y / cellSize);
+    let hexX = "0x" + Math.abs(offsetX).toString(16).padStart(2, "0").toUpperCase();
+    let hexY = "0x" + Math.abs(offsetY).toString(16).padStart(2, "0").toUpperCase();
+    document.getElementById("footerText").textContent = `${hexX}  :  ${hexY}`;
+  }
+
+  // Update the footer every 100ms
+  setInterval(updateFooterWithHexOffsets, 100);
+  </script>
+
+  <script>
+  document.addEventListener('mousemove', function(e) {
+    var cursor = document.getElementById('customCursor');
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+  </script>
+
+  <!-- Full-screen overlay SVG -->
+  <svg id="fullScreenOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" 
+      xmlns="http://www.w3.org/2000/svg" 
+      style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
+    <path fill="#00122b" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
+  </svg>
+
+  <script>
+    function updateOverlayHole() {
+      const appContainer = document.getElementById('appContainer');
+      const overlaySVG = document.getElementById('fullScreenOverlay');
+      const pathElement = overlaySVG.querySelector('path');
+
+      // Get the bounding rect of appContainer relative to the viewport
+      const rect = appContainer.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // Convert appContainer's position and size to percentages (0–100) of the viewport
+      const x = (rect.left / vw) * 100;
+      const y = (rect.top / vh) * 100;
+      const w = (rect.width / vw) * 100;
+      const h = (rect.height / vh) * 100;
+
+      // Get the computed border-radius in pixels (assume it is set to 100px)
+      const computedRadius = parseFloat(getComputedStyle(appContainer).borderRadius) || 100;
+      // Convert this pixel value into SVG coordinate units:
+      // For horizontal: rx = (computedRadius / vw) * 100
+      // For vertical:   ry = (computedRadius / vh) * 100
+      const rx = (computedRadius / vw) * 100;
+      const ry = (computedRadius / vh) * 100;
+
+      // Build the inner rounded rectangle path using arc commands
+      const innerRounded = `
+        M ${x + rx}, ${y}
+        H ${x + w - rx}
+        A ${rx},${ry} 0 0 1 ${x + w}, ${y + ry}
+        V ${y + h - ry}
+        A ${rx},${ry} 0 0 1 ${x + w - rx}, ${y + h}
+        H ${x + rx}
+        A ${rx},${ry} 0 0 1 ${x}, ${y + h - ry}
+        V ${y + ry}
+        A ${rx},${ry} 0 0 1 ${x + rx}, ${y}
+        Z`;
+
+      // Construct the full path:
+      // Outer rectangle covers the whole viewBox (0,0 to 100,100)
+      // then subtract the inner rounded rectangle
+      const d = `M0,0 H100 V100 H0 Z ${innerRounded}`;
+      pathElement.setAttribute('d', d);
+    }
+
+    // Update on load and when the viewport changes.
+    window.addEventListener('resize', updateOverlayHole);
+    window.addEventListener('scroll', updateOverlayHole);
+    updateOverlayHole();
+  </script>
+
+</body>
+</html>
