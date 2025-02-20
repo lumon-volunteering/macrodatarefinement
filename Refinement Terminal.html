@@ -3,961 +3,265 @@
 <head>
   <meta charset="UTF-8">
   <title>Macrodata Refinement UI – Dranesville</title>
-  <style>
-
-  #fullScreenOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;  /* Full viewport width */
-      height: 100vh; /* Full viewport height */
-      z-index: 9999; /* Ensure it sits on top of everything */
-      pointer-events: none; /* Allow interactions to pass through */
-    }
-
-
-    /* Ensure the document fills the viewport */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      background: #001C2E;
-    }
-
-    /* Fullscreen wrapper using Grid to center content */
-    #pageWrapper {
-      display: grid;
-      place-items: center;
-      width: 100vw;
-      height: 100vh;
-      background: #00122b;
-    }
-
-    /* The inner container that always maintains a 1.5:1 ratio.
-      It will expand to the maximum size that fits inside the viewport. */
-    #appContainer {
-      /* The width will be the smaller of:
-        - 100vw, or
-        - 1.5 times 100vh (since 1.5:1 means width = 1.5 x height) */
-      width: calc(min(90vw, 1.5 * 85vh));
-      /* Similarly, the height will be the smaller of:
-        - 100vh, or
-        - 100vw divided by 1.5 */
-      height: calc(min(90vh, 90vw / 1.5));
-      background: #001c2e;
-      position: relative;
-      margin-left: -450px;
-      /* Optionally add a border or other styling for debugging */
-      border-radius: 100px;
-      overflow: hidden;
-    }
-
-
-    body {
-      cursor: none;
-    }
-
-    #customCursor {
-    position: fixed;
-    pointer-events: none;
-    z-index: 1;
-    width: 32px;  /* adjust size as needed */
-    height: 32px; /* adjust size as needed */
-    transform: translate(-50%, -50%);
-    filter: drop-shadow(0 0 6px #fff);
-    }
-
-
-    /* Ensure html and body fill the viewport */
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #001C2E;
-      font-family: Gotham, sans-serif;
-      /* The background and CRT filter remain fully opaque */
-    }
-    
-
-    /* --- Global text glow for all characters --- */
-    body, #totalProgressName, #footerText, .binProgressText {
-      color: #37DFEF;
-      background: linear-gradient(to right, #001C2E 0%, #001C2E 0%, #37DFEF 0%, #37DFEF 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      transition: background 0.5s;
-      text-shadow: 0 0 8px #fff;
-      font-weight: bold;
-    }
-    #totalProgressText {
-      position: absolute;
-      z-index: 3;
-      color: #001C2E !important;
-      -webkit-text-fill-color: #001C2E !important;
-      -webkit-text-stroke: .7px #37dfef;
-      text-shadow: 0 0 8px #fff;     
-      background: none !important;
-      top: 50%;
-      left: -20%;
-      transform: translate(-50%, -50%);
-    }
-    #totalProgressName {
-      position: absolute;
-      z-index: 3;
-    }
-    /* Temper chart labels */
-    .chartRow[data-temper="WO"] .label { color: #8DD571; text-shadow: 0 0 8px #fff; }
-    .chartRow[data-temper="FC"] .label { color: #F2D230; text-shadow: 0 0 8px #fff; }
-    .chartRow[data-temper="DR"] .label { color: #F9A09F; text-shadow: 0 0 8px #fff; }
-    .chartRow[data-temper="MA"] .label { color: #047FFD; text-shadow: 0 0 8px #fff; }
-    .chartRow .label {
-      background: none !important;
-      -webkit-background-clip: initial !important;
-      -webkit-text-fill-color: initial !important;
-    }
-    /* Global line glow for drawn lines */
-    .line, .lid, .chartRow .bar, .chartRow .bar .fill {
-      box-shadow: 0 0 8px #fff;
-    }
-    /* Base layout styles */
-    #mainContainer {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-    /* Top Progress Area */
-    #totalProgressContainer {
-      position: absolute;
-      top: 0;
-      left: 0%;
-      width: 103%; 
-      height: 15vh;
-      background: #001C2E;
-      box-sizing: border-box;
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 2em;
-      z-index: 0;
-    }
-    #titleBox {
-      position: absolute;
-      margin-left: 40px;
-      height: 38%;
-      width: 75.4%;
-      box-sizing: border-box;
-      padding: 11px;
-      border: 3px solid #37DFEF;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 2;
-      box-shadow: 0 0 8px #fff;
-    }
-    #totalProgressFill {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-      background: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' width='1250' height='40' viewBox='0 0 1250 40'>\
-  <rect width='1250' height='40' fill='%23001C2E'/>\
-  <g stroke='%2300f0ff'>\
-    <!-- Line 1 -->\
-    <line x1='0.00'    y1='0' x2='0.00'    y2='40' stroke-width='5.00'  stroke-opacity='0.30'/>\
-    <!-- Line 2 -->\
-    <line x1='21.19'   y1='0' x2='21.19'   y2='40' stroke-width='5.25'  stroke-opacity='0.31'/>\
-    <!-- Line 3 -->\
-    <line x1='42.37'   y1='0' x2='42.37'   y2='40' stroke-width='5.51'  stroke-opacity='0.32'/>\
-    <!-- Line 4 -->\
-    <line x1='63.56'   y1='0' x2='63.56'   y2='40' stroke-width='5.76'  stroke-opacity='0.33'/>\
-    <!-- Line 5 -->\
-    <line x1='84.75'   y1='0' x2='84.75'   y2='40' stroke-width='6.02'  stroke-opacity='0.34'/>\
-    <!-- Line 6 -->\
-    <line x1='105.93'  y1='0' x2='105.93'  y2='40' stroke-width='6.27'  stroke-opacity='0.35'/>\
-    <!-- Line 7 -->\
-    <line x1='127.12'  y1='0' x2='127.12'  y2='40' stroke-width='6.53'  stroke-opacity='0.36'/>\
-    <!-- Line 8 -->\
-    <line x1='148.31'  y1='0' x2='148.31'  y2='40' stroke-width='6.78'  stroke-opacity='0.37'/>\
-    <!-- Line 9 -->\
-    <line x1='169.49'  y1='0' x2='169.49'  y2='40' stroke-width='7.03'  stroke-opacity='0.38'/>\
-    <!-- Line 10 -->\
-    <line x1='190.68'  y1='0' x2='190.68'  y2='40' stroke-width='7.29'  stroke-opacity='0.39'/>\
-    <!-- Line 11 -->\
-    <line x1='211.86'  y1='0' x2='211.86'  y2='40' stroke-width='7.54'  stroke-opacity='0.40'/>\
-    <!-- Line 12 -->\
-    <line x1='233.05'  y1='0' x2='233.05'  y2='40' stroke-width='7.80'  stroke-opacity='0.41'/>\
-    <!-- Line 13 -->\
-    <line x1='254.24'  y1='0' x2='254.24'  y2='40' stroke-width='8.05'  stroke-opacity='0.42'/>\
-    <!-- Line 14 -->\
-    <line x1='275.42'  y1='0' x2='275.42'  y2='40' stroke-width='8.31'  stroke-opacity='0.43'/>\
-    <!-- Line 15 -->\
-    <line x1='296.61'  y1='0' x2='296.61'  y2='40' stroke-width='8.56'  stroke-opacity='0.44'/>\
-    <!-- Line 16 -->\
-    <line x1='317.80'  y1='0' x2='317.80'  y2='40' stroke-width='8.81'  stroke-opacity='0.45'/>\
-    <!-- Line 17 -->\
-    <line x1='338.98'  y1='0' x2='338.98'  y2='40' stroke-width='9.07'  stroke-opacity='0.46'/>\
-    <!-- Line 18 -->\
-    <line x1='360.17'  y1='0' x2='360.17'  y2='40' stroke-width='9.32'  stroke-opacity='0.47'/>\
-    <!-- Line 19 -->\
-    <line x1='381.36'  y1='0' x2='381.36'  y2='40' stroke-width='9.58'  stroke-opacity='0.48'/>\
-    <!-- Line 20 -->\
-    <line x1='402.54'  y1='0' x2='402.54'  y2='40' stroke-width='9.83'  stroke-opacity='0.49'/>\
-    <!-- Line 21 -->\
-    <line x1='423.73'  y1='0' x2='423.73'  y2='40' stroke-width='10.08' stroke-opacity='0.50'/>\
-    <!-- Line 22 -->\
-    <line x1='444.92'  y1='0' x2='444.92'  y2='40' stroke-width='10.34' stroke-opacity='0.51'/>\
-    <!-- Line 23 -->\
-    <line x1='466.10'  y1='0' x2='466.10'  y2='40' stroke-width='10.59' stroke-opacity='0.52'/>\
-    <!-- Line 24 -->\
-    <line x1='487.29'  y1='0' x2='487.29'  y2='40' stroke-width='10.85' stroke-opacity='0.53'/>\
-    <!-- Line 25 -->\
-    <line x1='508.47'  y1='0' x2='508.47'  y2='40' stroke-width='11.10' stroke-opacity='0.54'/>\
-    <!-- Line 26 -->\
-    <line x1='529.66'  y1='0' x2='529.66'  y2='40' stroke-width='11.36' stroke-opacity='0.55'/>\
-    <!-- Line 27 -->\
-    <line x1='550.85'  y1='0' x2='550.85'  y2='40' stroke-width='11.61' stroke-opacity='0.56'/>\
-    <!-- Line 28 -->\
-    <line x1='572.03'  y1='0' x2='572.03'  y2='40' stroke-width='11.86' stroke-opacity='0.57'/>\
-    <!-- Line 29 -->\
-    <line x1='593.22'  y1='0' x2='593.22'  y2='40' stroke-width='12.12' stroke-opacity='0.58'/>\
-    <!-- Line 30 -->\
-    <line x1='614.41'  y1='0' x2='614.41'  y2='40' stroke-width='12.37' stroke-opacity='0.59'/>\
-    <!-- Line 31 -->\
-    <line x1='635.59'  y1='0' x2='635.59'  y2='40' stroke-width='12.63' stroke-opacity='0.60'/>\
-    <!-- Line 32 -->\
-    <line x1='656.78'  y1='0' x2='656.78'  y2='40' stroke-width='12.88' stroke-opacity='0.61'/>\
-    <!-- Line 33 -->\
-    <line x1='677.97'  y1='0' x2='677.97'  y2='40' stroke-width='13.14' stroke-opacity='0.62'/>\
-    <!-- Line 34 -->\
-    <line x1='699.15'  y1='0' x2='699.15'  y2='40' stroke-width='13.39' stroke-opacity='0.63'/>\
-    <!-- Line 35 -->\
-    <line x1='720.34'  y1='0' x2='720.34'  y2='40' stroke-width='13.64' stroke-opacity='0.64'/>\
-    <!-- Line 36 -->\
-    <line x1='741.53'  y1='0' x2='741.53'  y2='40' stroke-width='13.90' stroke-opacity='0.65'/>\
-    <!-- Line 37 -->\
-    <line x1='762.71'  y1='0' x2='762.71'  y2='40' stroke-width='14.15' stroke-opacity='0.66'/>\
-    <!-- Line 38 -->\
-    <line x1='783.90'  y1='0' x2='783.90'  y2='40' stroke-width='14.41' stroke-opacity='0.67'/>\
-    <!-- Line 39 -->\
-    <line x1='805.08'  y1='0' x2='805.08'  y2='40' stroke-width='14.66' stroke-opacity='0.68'/>\
-    <!-- Line 40 -->\
-    <line x1='826.27'  y1='0' x2='826.27'  y2='40' stroke-width='14.92' stroke-opacity='0.69'/>\
-    <!-- Line 41 -->\
-    <line x1='847.46'  y1='0' x2='847.46'  y2='40' stroke-width='15.17' stroke-opacity='0.70'/>\
-    <!-- Line 42 -->\
-    <line x1='868.64'  y1='0' x2='868.64'  y2='40' stroke-width='15.42' stroke-opacity='0.71'/>\
-    <!-- Line 43 -->\
-    <line x1='889.83'  y1='0' x2='889.83'  y2='40' stroke-width='15.68' stroke-opacity='0.72'/>\
-    <!-- Line 44 -->\
-    <line x1='911.02'  y1='0' x2='911.02'  y2='40' stroke-width='15.93' stroke-opacity='0.73'/>\
-    <!-- Line 45 -->\
-    <line x1='932.20'  y1='0' x2='932.20'  y2='40' stroke-width='16.19' stroke-opacity='0.74'/>\
-    <!-- Line 46 -->\
-    <line x1='953.39'  y1='0' x2='953.39'  y2='40' stroke-width='16.44' stroke-opacity='0.75'/>\
-    <!-- Line 47 -->\
-    <line x1='974.58'  y1='0' x2='974.58'  y2='40' stroke-width='16.69' stroke-opacity='0.76'/>\
-    <!-- Line 48 -->\
-    <line x1='995.76'  y1='0' x2='995.76'  y2='40' stroke-width='16.95' stroke-opacity='0.77'/>\
-    <!-- Line 49 -->\
-    <line x1='1016.95' y1='0' x2='1016.95' y2='40' stroke-width='17.20' stroke-opacity='0.78'/>\
-    <!-- Line 50 -->\
-    <line x1='1038.14' y1='0' x2='1038.14' y2='40' stroke-width='17.46' stroke-opacity='0.79'/>\
-    <!-- Line 51 -->\
-    <line x1='1059.32' y1='0' x2='1059.32' y2='40' stroke-width='17.71' stroke-opacity='0.80'/>\
-    <!-- Line 52 -->\
-    <line x1='1080.51' y1='0' x2='1080.51' y2='40' stroke-width='17.97' stroke-opacity='0.81'/>\
-    <!-- Line 53 -->\
-    <line x1='1101.69' y1='0' x2='1101.69' y2='40' stroke-width='18.22' stroke-opacity='0.82'/>\
-    <!-- Line 54 -->\
-    <line x1='1122.88' y1='0' x2='1122.88' y2='40' stroke-width='18.47' stroke-opacity='0.83'/>\
-    <!-- Line 55 -->\
-    <line x1='1144.07' y1='0' x2='1144.07' y2='40' stroke-width='18.73' stroke-opacity='0.84'/>\
-    <!-- Line 56 -->\
-    <line x1='1165.25' y1='0' x2='1165.25' y2='40' stroke-width='18.98' stroke-opacity='0.85'/>\
-    <!-- Line 57 -->\
-    <line x1='1186.44' y1='0' x2='1186.44' y2='40' stroke-width='19.24' stroke-opacity='0.86'/>\
-    <!-- Line 58 -->\
-    <line x1='1207.63' y1='0' x2='1207.63' y2='40' stroke-width='19.49' stroke-opacity='0.87'/>\
-    <!-- Line 59 -->\
-    <line x1='1228.81' y1='0' x2='1228.81' y2='40' stroke-width='19.75' stroke-opacity='0.88'/>\
-    <!-- Line 60 -->\
-    <line x1='1250.00' y1='0' x2='1250.00' y2='40' stroke-width='20.00' stroke-opacity='0.90'/>\
-  </g>\
-</svg>") no-repeat center;
-      background-size: cover;
-      box-shadow: 0 0 8px #fff;
-    }
-    #progressBlocker {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #001C2E;
-      z-index: 2;
-      transition: transform 0.5s;
-    }
-    /* New Globe Container */
-    #globeContainer {
-      position: absolute;
-      left: 91%;
-      scale: 1;
-      z-index: 20;
-      height: calc(15vh * 0.74);
-    }
-    #globeContainer svg {
-      display: block;
-      height: 100%;
-      transform: scale(0.85);
-      filter: drop-shadow(0 0 8px #fff);
-    }
-    /* Top Separator */
-    #topSeparator {
-      position: absolute;
-      top: 14.6vh;
-      left: 0;
-      width: 100%;
-      pointer-events: none;
-    }
-    #topSeparator .line {
-      border-top: 3px solid #37DFEF;
-      margin: 3px 0; /* increased gap: 1.5× the original 2px gap */
-    }
-    #topSeparator .line:first-child {
-      box-shadow: 0 -8px 8px -4px #fff;
-    }
-    #topSeparator .line:last-child {
-      box-shadow: 0 8px 8px -4px #fff;
-    }
-    /* Canvas Container for digit grid */
-    #canvasContainer {
-      position: absolute;
-      top: calc(15vh + 10px);
-      left: 0;
-      right: 0;
-      bottom: calc(150px + 30px);
-    }
-    canvas {
-      display: block;
-      background: #001C2E;
-      position: relative;
-      z-index: 1;
-    }
-    /* Bottom Separator */
-    #bottomSeparator {
-      position: absolute;
-      bottom: calc(150px + 16px);
-      left: 0;
-      width: 100%;
-      pointer-events: none;
-    }
-    #bottomSeparator .line {
-      border-top: 3px solid #37DFEF;
-      margin: 3px 0; /* increased gap */
-    }
-    /* Bins Container (5 bins) */
-    #binsContainer {
-      position: absolute;
-      bottom: 32px;
-      left: 0;
-      width: 100%;
-      height: 150px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 5;
-    }
-    .binContainer {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .bin {
-      width: 200px;
-      height: 50px;
-      background: #001C2E;
-      border: 3px solid #37DFEF;
-      text-align: center;
-      line-height: 50px;
-      font-size: 2em;
-      color: #37DFEF;
-      position: relative;
-      box-sizing: border-box;
-      z-index: 6;
-      font-weight: bold;
-      /* Remove glow effect from bin text */
-      text-shadow: none !important;
-      -webkit-text-fill-color: currentColor !important;
-      /* Remove any container box-shadow if present */
-      box-shadow: none !important;
-    }
-    /* Original lids that pivot from the bin corners */
-    .lid {
-      position: absolute;
-      top: -2px;
-      width: 50%;
-      height: 3px;
-      background: #37DFEF;
-      transform: rotate(0deg);
-      transition: transform 1s;
-      z-index: 7;
-    }
-
-    .lid.left { left: 0; transform-origin: top left; }
-    .lid.right { right: 0; transform-origin: top right; }
-    .bin.open .lid.left { transform: rotate(-135deg); }
-    .bin.open .lid.right { transform: rotate(135deg); }
-    .bin.closing .lid.left { transform: rotate(135deg); }
-    .bin.closing .lid.right { transform: rotate(-135deg); }
-
-    .lid-duplicate {
-      position: absolute;
-      top: -2px;
-      width: 50%;
-      height: 3px;
-      background: #37DFEF;
-      transform: rotate(0deg);
-      transition: transform 1s, top 1s;
-      z-index: 7;
-    }
-
-    .lid-duplicate.left { left: 0; transform-origin: left center; }
-    .lid-duplicate.right { right: 0; transform-origin: right center; }
-    .bin.open .lid-duplicate.left { transform: rotate(-135deg); top: -20px; }
-    .bin.open .lid-duplicate.right { transform: rotate(135deg); top: -20px; }
-    .bin.closing .lid-duplicate.left { transform: rotate(135deg); top: -20px; }
-    .bin.closing .lid-duplicate.right { transform: rotate(-135deg); top: -20px; }
-
-    #connectorContainer {
-      position: relative;
-      z-index: 5;
-    }
-
-    /* Bin progress bars */
-    .binProgress {
-      width: 200px;
-      height: 50px;
-      background: #001C2E;
-      border: 3px solid #37DFEF;
-      box-sizing: border-box;
-      margin-top: 5px;
-      position: relative;
-      z-index: 6;
-      display: flex;
-      align-items: center;
-      padding-left: 5px;
-      font-size: 1.2em;
-      /* Add glow to the binProgress container */
-      box-shadow: 0 0 8px #fff;
-    }
-    /* Container that spans the entire width of the progress bar */
-    .binProgressTextContainer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-    /* Both text layers share these base styles */
-    .binProgressText {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      text-align: left;
-      padding-left: 10px; 
-      line-height: 50px;
-      font-weight: bold;
-      z-index: 5;
-      /* Prevent the text from stretching */
-      white-space: nowrap;
-    }
-    /* The “back” text shows the unfilled color */
-    .binProgressText.back {
-      color: #37dfef;
-      text-shadow: none;
-    }
-    /* The “front” text shows the fill color and will be clipped */
-    .binProgressText.front {
-      color: #001c2e;
-    clip-path: inset(0 calc(100% - 0%) 0 0);
-    -webkit-clip-path: inset(0 calc(100% - 0%) 0 0);
-    transition: clip-path 0.5s;
-    }
-    .binProgressFill {
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      background: #37DFEF;
-      width: 0%;
-      transition: width 0.5s;
-      z-index: 1;
-    }
-    /* Bin Charts */
-    .binChart {
-      position: absolute;
-      bottom: 100%;
-      left: 0;
-      width: 100%;
-      height: 0;
-      background: #001C2E;
-      border: 3px solid #37DFEF;
-      overflow: hidden;
-      transition: height 0.75s;
-      box-sizing: border-box;
-      z-index: 6;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-evenly;
-    }
-    .chartHeader {
-      width: 80%;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #001C2E;
-      border: 2px solid #37DFEF;
-      text-align: center;
-      line-height: 40px;
-      font-weight: bold;
-      text-shadow: 0 0 8px #fff !important;
-    }
-    .chartRow {
-      display: flex;
-      align-items: center;
-      width: 90%;
-      height: 40px;
-      padding: 5px;
-    }
-    .chartRow .label {
-      width: 40px;
-      text-transform: uppercase;
-      font-weight: bold;
-      margin-left: 10px;
-    }
-    .chartRow .bar {
-      flex: 1;
-      height: 80%;
-      width: 60px;
-      background: #001C2E;
-      position: relative;
-      margin-left: 20px;
-      box-shadow: 0 0 8px #fff;
-    }
-    .chartRow .bar .fill {
-      height: 100%;
-      width: 0%;
-      transition: width 0.75s;
-      box-shadow: 0 0 8px #fff;
-    }
-    /* New Footer Container */
-    #footerContainer {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      text-align: center;
-    }
-    #footerSeparator .line {
-      border-top: 3px solid #37DFEF;
-      margin: 0 auto;
-      width: 100%;
-    }
-    #footerText {
-      color: #37DFEF;
-      margin-top: 5px;
-      margin-bottom: 5px;
-      font-size: 1.5em;
-      background: linear-gradient(to right, #001C2E 0%, #001C2E 0%, #37DFEF 0%, #37DFEF 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      transition: background 0.5s;
-      font-weight: bold;
-      /* Apply glow only to the text */
-      text-shadow: 0 0 8px #fff !important;
-      -webkit-text-fill-color: currentColor !important;
-    }
-    /* Additional visual overrides for bins only (containers) */
-    .bin {
-      -webkit-text-stroke: 0.5px currentColor;
-      font-weight: bold;
-      background: none !important;
-      -webkit-background-clip: initial !important;
-      -webkit-text-fill-color: currentColor !important;
-      /* Remove any container box-shadow (if previously applied) */
-      box-shadow: none !important;
-    }
-    .binProgressText, .chartHeader {
-      -webkit-text-stroke: 0.5px currentColor;
-      font-weight: bold;
-      background: none !important;
-      -webkit-background-clip: initial !important;
-      -webkit-text-fill-color: currentColor !important;
-      text-shadow: 0 0 8px #fff !important;
-    }
-    /*  styling */
-    #popup, #popupContaminated, #popupWrongBin {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #001C2E !important;
-      border: 3px solid #37DFEF;
-      color: #37DFEF;
-      padding: 20px;
-      font-size: 2em;
-      display: none;
-      z-index: 20;
-      font-weight: bold;
-      -webkit-text-stroke: 0.5px currentColor;
-      -webkit-background-clip: initial !important;
-      -webkit-text-fill-color: currentColor !important;
-      text-shadow: 0 0 8px #fff !important;
-    }
-    /* Set new popup text for contaminated data */
-    #popupContaminated {
-      content: "";
-    }
-    
-    /* ===== CRT Effect Filter (without text shadow animation) ===== */
-    @keyframes flicker {
-      0% { opacity: 0.27861; }
-      5% { opacity: 0.34769; }
-      10% { opacity: 0.23604; }
-      15% { opacity: 0.90626; }
-      20% { opacity: 0.18128; }
-      25% { opacity: 0.83891; }
-      30% { opacity: 0.65583; }
-      35% { opacity: 0.67807; }
-      40% { opacity: 0.26559; }
-      45% { opacity: 0.84693; }
-      50% { opacity: 0.96019; }
-      55% { opacity: 0.08594; }
-      60% { opacity: 0.20313; }
-      65% { opacity: 0.71988; }
-      70% { opacity: 0.53455; }
-      75% { opacity: 0.37288; }
-      80% { opacity: 0.71428; }
-      85% { opacity: 0.70419; }
-      90% { opacity: 0.7003; }
-      95% { opacity: 0.36108; }
-      100% { opacity: 0.24387; }
-    }
-    .crt {
-      position: relative;
-    }
-    .crt::after {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      background: rgba(18, 16, 16, 0.1);
-      opacity: 0;
-      z-index: 2;
-      pointer-events: none;
-      animation: flicker 0.15s infinite;
-    }
-    .crt::before {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      background: 
-                  radial-gradient(ellipse farthest-corner, rgba(0,28,46,0) 75%, #000b13 100%),
-                  linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-                  linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-                  
-      z-index: 2;
-      background-size: cover, 100% 2px, 3px 100%;
-      pointer-events: none;
-    }
-    
-    /* Reapply glow effect on separator lines and bins only (containers) */
-    .separator .line,
-    .bin {
-      box-shadow: 0 0 8px #fff !important;
-      text-shadow: 0 0 8px #fff !important;
-    }
-  </style>
+  <link rel="stylesheet" href="refinement.css">
 </head>
 
 <body>
   <div id="pageWrapper">
-    <div id="appContainer" class="crt">
-      <div id="mainContainer">
-        <!-- Wrap all UI elements (except background and CRT filter) in uiContainer for fade-in -->
-        <div id="uiContainer">
-          <!-- Top progress area -->
-          <div id="totalProgressContainer">
-            <div id="titleBox">
-              <div id="globeContainer">
-                <svg width="300" height="150" viewBox="0 0 300 150">
-                  <ellipse cx="150" cy="75" rx="150" ry="75" fill="#001C2E" stroke="#37DFEF" stroke-width="4"/>
-                  <line x1="30" y1="30" x2="270" y2="30" stroke="#37DFEF" stroke-width="4"/>
-                  <line x1="30" y1="120" x2="270" y2="120" stroke="#37DFEF" stroke-width="4"/>
-                  <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
-                  <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
-                  <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
-                  <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
-                  <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none"/>
-                </svg>
-                <div id="totalProgressText">0% Complete</div>
+    <div id="offScreen">
+      <div id="appContainer" class="crt">
+        <div id="mainContainer">
+          <!-- Wrap all UI elements (except background and CRT filter) in uiContainer for fade-in -->
+            <!-- Top progress area -->
+            <div id="totalProgressContainer">
+              <div id="titleBox">
+                <div id="globeContainer">
+                  <svg width="300" height="150" viewBox="0 0 300 150">
+                    <ellipse cx="150" cy="75" rx="150" ry="75" fill="#001C2E" stroke="#37DFEF" stroke-width="4"/>
+                    <line x1="30" y1="30" x2="270" y2="30" stroke="#37DFEF" stroke-width="4"/>
+                    <line x1="30" y1="120" x2="270" y2="120" stroke="#37DFEF" stroke-width="4"/>
+                    <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                    <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                    <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                    <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                    <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none"/>
+                  </svg>
+                  <div id="totalProgressText">0% Complete</div>
+                </div>
+                <div id="totalProgressName">Dranesville</div>
+                <div id="totalProgressFill"></div>
+                <div id="progressBlocker"></div>
               </div>
-              <div id="totalProgressName">Dranesville</div>
-              <div id="totalProgressFill"></div>
-              <div id="progressBlocker"></div>
             </div>
-          </div>
 
-          <!-- Top separator -->
-          <div id="topSeparator" class="separator">
-            <div class="line"></div>
-            <div class="line"></div>
-          </div>
-          
-          <!-- Canvas container for digit grid -->
-          <div id="canvasContainer">
-            <canvas id="gridCanvas"></canvas>
-          </div>
-          
-          <!-- Bottom separator -->
-          <div id="bottomSeparator" class="separator">
-            <div class="line"></div>
-            <div class="line"></div>
-          </div>
-          
-          <!-- Bins container -->
-          <div id="binsContainer">
-            <div class="binContainer">
-              <div class="bin" data-bin="01">01
-                <div class="lid left"></div>
-                <div class="lid right"></div>
-                <div class="lid-duplicate left"></div>
-                <div class="lid-duplicate right"></div>
-              </div>
-              <div class="binProgress" data-bin="01">
-                <div class="binProgressTextContainer">
-                  <span class="binProgressText back">0%</span>
-                  <span class="binProgressText front">0%</span>
-                </div>
-                <div class="binProgressFill"></div>
-              </div>
-              <div class="binChart" data-bin="01">
-                <div class="chartHeader">01</div>
-                <div class="chartRow" data-temper="WO">
-                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
-                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="FC">
-                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
-                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="DR">
-                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
-                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="MA">
-                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
-                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="binContainer">
-              <div class="bin" data-bin="02">02
-                <div class="lid left"></div>
-                <div class="lid right"></div>
-                <div class="lid-duplicate left"></div>
-                <div class="lid-duplicate right"></div>
-              </div>
-              <div class="binProgress" data-bin="02">
-                <div class="binProgressTextContainer">
-                  <span class="binProgressText back">0%</span>
-                  <span class="binProgressText front">0%</span>
-                </div>
-                <div class="binProgressFill"></div>
-              </div>
-
-              <div class="binChart" data-bin="02">
-                <div class="chartHeader">02</div>
-                <div class="chartRow" data-temper="WO">
-                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
-                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="FC">
-                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
-                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="DR">
-                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
-                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="MA">
-                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
-                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="binContainer">
-              <div class="bin" data-bin="03">03
-                <div class="lid left"></div>
-                <div class="lid right"></div>
-                <div class="lid-duplicate left"></div>
-                <div class="lid-duplicate right"></div>
-              </div>
-              <div class="binProgress" data-bin="03">
-                <div class="binProgressTextContainer">
-                  <span class="binProgressText back">0%</span>
-                  <span class="binProgressText front">0%</span>
-                </div>
-                <div class="binProgressFill"></div>
-              </div>
-              <div class="binChart" data-bin="03">
-                <div class="chartHeader">03</div>
-                <div class="chartRow" data-temper="WO">
-                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
-                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="FC">
-                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
-                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="DR">
-                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
-                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="MA">
-                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
-                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="binContainer">
-              <div class="bin" data-bin="04">04
-                <div class="lid left"></div>
-                <div class="lid right"></div>
-                <div class="lid-duplicate left"></div>
-                <div class="lid-duplicate right"></div>
-              </div>
-              <div class="binProgress" data-bin="04">
-                <div class="binProgressTextContainer">
-                  <span class="binProgressText back">0%</span>
-                  <span class="binProgressText front">0%</span>
-                </div>
-                <div class="binProgressFill"></div>
-              </div>
-
-              <div class="binChart" data-bin="04">
-                <div class="chartHeader">04</div>
-                <div class="chartRow" data-temper="WO">
-                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
-                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="FC">
-                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
-                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="DR">
-                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
-                  <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="MA">
-                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
-                  <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="binContainer">
-              <div class="bin" data-bin="05">05
-                <div class="lid left"></div>
-                <div class="lid right"></div>
-                <div class="lid-duplicate left"></div>
-                <div class="lid-duplicate right"></div>
-              </div>
-              <div class="binProgress" data-bin="05">
-                <div class="binProgressTextContainer">
-                  <span class="binProgressText back">0%</span>
-                  <span class="binProgressText front">0%</span>
-                </div>
-                <div class="binProgressFill"></div>
-              </div>
-
-              <div class="binChart" data-bin="05">
-                <div class="chartHeader">05</div>
-                <div class="chartRow" data-temper="WO">
-                  <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
-                  <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="FC">
-                  <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
-                  <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="DR">
-                  <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
-                  <div class="bar" style="border: 3px solid #F9A09F;"><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-                <div class="chartRow" data-temper="MA">
-                  <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
-                  <div class="bar" style="border: 3px solid #047FFD;"><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- SVG container for dynamic lid connectors (drawn only while lids are animating) -->
-          <svg id="connectorContainer" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 7;"></svg>
-          
-          <!-- Popup Elements -->
-          <div id="popup">NOPE</div>
-          <div id="popupContaminated">PLEASE DO NOT BIN HEALTHY DATA</div>
-          <div id="popupWrongBin">WRONG BIN</div>
-          
-          <!-- Footer Container -->
-          <div id="footerContainer">
-            <div id="footerSeparator" class="separator">
+            <!-- Top separator -->
+            <div id="topSeparator" class="separator">
+              <div class="line"></div>
               <div class="line"></div>
             </div>
-            <div id="footerText">0x00  :  0x00</div>
+            
+            <!-- Canvas container for digit grid -->
+            <div id="canvasContainer">
+              <canvas id="gridCanvas"></canvas>
+            </div>
+            
+            <!-- Bottom separator -->
+            <div id="bottomSeparator" class="separator">
+              <div class="line"></div>
+              <div class="line"></div>
+            </div>
+            
+            <!-- Bins container -->
+            <div id="binsContainer">
+              <div class="binContainer">
+                <div class="bin" data-bin="01">01
+                  <div class="lid left"></div>
+                  <div class="lid right"></div>
+                  <div class="lid-duplicate left"></div>
+                  <div class="lid-duplicate right"></div>
+                </div>
+                <div class="binProgress" data-bin="01">
+                  <div class="binProgressTextContainer">
+                    <span class="binProgressText back">0%</span>
+                    <span class="binProgressText front">0%</span>
+                  </div>
+                  <div class="binProgressFill"></div>
+                </div>
+                <div class="binChart" data-bin="01">
+                  <div class="chartHeader">01</div>
+                  <div class="chartRow" data-temper="WO">
+                    <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                    <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="FC">
+                    <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                    <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="DR">
+                    <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                    <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="MA">
+                    <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                    <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="binContainer">
+                <div class="bin" data-bin="02">02
+                  <div class="lid left"></div>
+                  <div class="lid right"></div>
+                  <div class="lid-duplicate left"></div>
+                  <div class="lid-duplicate right"></div>
+                </div>
+                <div class="binProgress" data-bin="02">
+                  <div class="binProgressTextContainer">
+                    <span class="binProgressText back">0%</span>
+                    <span class="binProgressText front">0%</span>
+                  </div>
+                  <div class="binProgressFill"></div>
+                </div>
+
+                <div class="binChart" data-bin="02">
+                  <div class="chartHeader">02</div>
+                  <div class="chartRow" data-temper="WO">
+                    <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                    <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="FC">
+                    <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                    <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="DR">
+                    <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                    <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="MA">
+                    <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                    <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="binContainer">
+                <div class="bin" data-bin="03">03
+                  <div class="lid left"></div>
+                  <div class="lid right"></div>
+                  <div class="lid-duplicate left"></div>
+                  <div class="lid-duplicate right"></div>
+                </div>
+                <div class="binProgress" data-bin="03">
+                  <div class="binProgressTextContainer">
+                    <span class="binProgressText back">0%</span>
+                    <span class="binProgressText front">0%</span>
+                  </div>
+                  <div class="binProgressFill"></div>
+                </div>
+                <div class="binChart" data-bin="03">
+                  <div class="chartHeader">03</div>
+                  <div class="chartRow" data-temper="WO">
+                    <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                    <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="FC">
+                    <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                    <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="DR">
+                    <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                    <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="MA">
+                    <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                    <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="binContainer">
+                <div class="bin" data-bin="04">04
+                  <div class="lid left"></div>
+                  <div class="lid right"></div>
+                  <div class="lid-duplicate left"></div>
+                  <div class="lid-duplicate right"></div>
+                </div>
+                <div class="binProgress" data-bin="04">
+                  <div class="binProgressTextContainer">
+                    <span class="binProgressText back">0%</span>
+                    <span class="binProgressText front">0%</span>
+                  </div>
+                  <div class="binProgressFill"></div>
+                </div>
+
+                <div class="binChart" data-bin="04">
+                  <div class="chartHeader">04</div>
+                  <div class="chartRow" data-temper="WO">
+                    <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                    <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="FC">
+                    <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                    <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="DR">
+                    <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                    <div class="bar" style="border: 3px solid #F9A09F;" ><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="MA">
+                    <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                    <div class="bar" style="border: 3px solid #047FFD;" ><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="binContainer">
+                <div class="bin" data-bin="05">05
+                  <div class="lid left"></div>
+                  <div class="lid right"></div>
+                  <div class="lid-duplicate left"></div>
+                  <div class="lid-duplicate right"></div>
+                </div>
+                <div class="binProgress" data-bin="05">
+                  <div class="binProgressTextContainer">
+                    <span class="binProgressText back">0%</span>
+                    <span class="binProgressText front">0%</span>
+                  </div>
+                  <div class="binProgressFill"></div>
+                </div>
+
+                <div class="binChart" data-bin="05">
+                  <div class="chartHeader">05</div>
+                  <div class="chartRow" data-temper="WO">
+                    <div class="label" style="color:#8DD571; text-shadow:0 0 8px #fff;">WO</div>
+                    <div class="bar" style="border: 3px solid #8DD571;" ><div class="fill" style="background:#8DD571; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="FC">
+                    <div class="label" style="color:#F2D230; text-shadow:0 0 8px #fff;">FC</div>
+                    <div class="bar" style="border: 3px solid #F2D230;" ><div class="fill" style="background:#F2D230; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="DR">
+                    <div class="label" style="color:#F9A09F; text-shadow:0 0 8px #fff;">DR</div>
+                    <div class="bar" style="border: 3px solid #F9A09F;"><div class="fill" style="background:#F9A09F; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                  <div class="chartRow" data-temper="MA">
+                    <div class="label" style="color:#047FFD; text-shadow:0 0 8px #fff;">MA</div>
+                    <div class="bar" style="border: 3px solid #047FFD;"><div class="fill" style="background:#047FFD; box-shadow:0 0 8px #fff;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- SVG container for dynamic lid connectors (drawn only while lids are animating) -->
+            <svg id="connectorContainer" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 7;"></svg>
+            
+            <!-- Popup Elements -->
+            <div id="popup">NOPE</div>
+            <div id="popupContaminated">PLEASE DO NOT BIN HEALTHY DATA</div>
+            <div id="popupWrongBin">WRONG BIN</div>
+            
+            <!-- Footer Container -->
+            <div id="footerContainer">
+              <div id="footerSeparator" class="separator">
+                <div class="line"></div>
+              </div>
+              <div id="footerText">0x00  :  0x00</div>
+            </div>
+          <div id="customCursor">
+            <img src="cursor.png" alt="custom cursor">
           </div>
-        </div> <!-- end of #uiContainer -->
 
-        <div id="customCursor">
-          <img src="cursor.png" alt="custom cursor">
-        </div>
-
-      </div> <!-- end of #mainContainer -->
+        </div> <!-- end of #mainContainer -->
 
 
 
+      </div>
     </div>
   </div>
 
   
   <!-- UI Fade-In for UI elements (not affecting background or CRT) -->
   <style>
-    #uiContainer {
-      opacity: 0;
-      animation: fadeIn 2s ease-out forwards;
-    }
     @keyframes fadeIn {
       from {opacity: 0; }
       to { opacity: 1; }
@@ -1645,6 +949,11 @@
 
 
     function draw() {
+
+      let totalCycleDuration = 6000;      // Overall cycle: 6 seconds.
+      let sourcePauseDuration = 2000;     // First 2 seconds: source group grows.
+      let waveBurstDuration = totalCycleDuration - sourcePauseDuration; // 4000ms for the wave burst.
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const now = performance.now();
       const t = now / 1000;
@@ -1660,25 +969,20 @@
         if (keysPressed["ArrowRight"] || keysPressed["d"] || keysPressed["D"]) gridOffset.x += moveSpeed;
       }
       
-      let isTwitchFrame = false;
-      if (activeSourceGroup && !punishActive) {
-         let cyclePeriod = activeSourceGroup.period * 1000;
-         let cycleTime = now - activeSourceGroup.startTime;
-         let interval = 1000 / activeSourceGroup.frequency;
-         if ((cycleTime % cyclePeriod) < 1000 && ((cycleTime % 1000) % interval) < 90) {
-            isTwitchFrame = true;
-         }
-      }
+
       
       for (let i = Math.floor(gridOffset.x / cellSize) - 2; i <= Math.floor((gridOffset.x + canvas.width) / cellSize) + 2; i++) {
         for (let j = Math.floor(gridOffset.y / cellSize) - 2; j <= Math.floor((gridOffset.y + canvas.height) / cellSize) + 2; j++) {
           const key = i + "," + j;
           if (removedCells.has(key)) continue;
-          if ((isTwitchFrame || punishActive) && activeSourceGroup &&
+          // Determine if this cell belongs to the active source group.
+          let isSourceGroupCell = false;
+          if (activeSourceGroup &&
               (key === activeSourceGroup.source_i + "," + activeSourceGroup.source_j ||
-               activeSourceGroup.partners.includes(key))) {
-            continue;
+              activeSourceGroup.partners.includes(key))) {
+            isSourceGroupCell = true;
           }
+
           if (capturedGroup && capturedGroup.cells.some(c => c.i === i && c.j === j)) {
             continue;
           }
@@ -1704,6 +1008,91 @@
           ctx.shadowBlur = 8;
           let d = Math.hypot(pos.x - currentMousePos.x, pos.y - currentMousePos.y);
           let fontSize = effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d / (2 * cellSize)));
+
+// --- Begin Source Group vs. Wave Scaling Branch ---
+if (activeSourceGroup && activeSourceGroup.startTime !== undefined) {
+    // Compute the elapsed time since the source group was initialized.
+    let currentTimeEffective = performance.now() - activeSourceGroup.startTime;
+    let amplitude = 0.7; // e.g., 70% increase at peak.
+    
+    // Compute the current time within the 6-second cycle.
+    let cycleTime = currentTimeEffective % totalCycleDuration;
+    
+    if (isSourceGroupCell) {
+        // For source group cells:
+        const transitionDuration = 200; // transition period in ms
+        // For the first 2 seconds (sourcePauseDuration), scale linearly from 1 to 1+amplitude.
+        if (cycleTime < sourcePauseDuration) {
+            // During the first 2000ms, scale linearly up to 1+amplitude.
+            let scaleFactor = 1 + amplitude * (cycleTime / sourcePauseDuration);
+            fontSize = fontSize * scaleFactor;
+        } else if (cycleTime < sourcePauseDuration + transitionDuration) {
+            // Over the next 'transitionDuration' ms, gradually return from (1+amplitude) to 1.
+            let t = (cycleTime - sourcePauseDuration) / transitionDuration;
+            let scaleFactor = (1 + amplitude) * (1 - t) + 1 * t;
+            fontSize = fontSize * scaleFactor;
+        }
+
+        // After 2 seconds, source group cells return to normal size.
+        // (No wave effect is applied to them.)
+    } else {
+        // For non–source cells:
+        // Before 2 seconds, no wave effect is applied.
+        if (cycleTime < sourcePauseDuration) {
+            // Do nothing; fontSize remains unchanged.
+        } else {
+            // During the wave burst phase, use adjusted time.
+            let adjustedTime = cycleTime - sourcePauseDuration; // Goes from 0 to waveBurstDuration (4000ms).
+            let maxScale = 1;  // Default no scaling.
+            let freq = activeSourceGroup.frequency; // wave frequency (1 to 5)
+            let waveLife = 4000; // each candidate wave persists for 4000ms.
+            let threshold = 1.0; // Controls the width of the wavefront (in cell units).
+            
+            // For non–source cells, we use candidate waves launched during the burst.
+            // Candidate waves are launched at: launchTime = (n*totalCycleDuration) + sourcePauseDuration + (k/freq)*waveBurstDuration.
+            let cycleIndices = [];
+            let currentCycle = Math.floor(currentTimeEffective / totalCycleDuration);
+            cycleIndices.push(currentCycle);
+            if (currentCycle > 0) {
+                cycleIndices.push(currentCycle - 1);
+            }
+            // Also, compute the distance from the current cell to the source group.
+            let groupCells = [];
+            groupCells.push({ i: activeSourceGroup.source_i, j: activeSourceGroup.source_j });
+            activeSourceGroup.partners.forEach(function(key) {
+                let parts = key.split(",").map(Number);
+                groupCells.push({ i: parts[0], j: parts[1] });
+            });
+            let dGroup = Infinity;
+            for (let cell of groupCells) {
+                let dTemp = Math.sqrt((i - cell.i) ** 2 + (j - cell.j) ** 2);
+                if (dTemp < dGroup) { dGroup = dTemp; }
+            }
+            if (dGroup <= 23) {
+                for (let n of cycleIndices) {
+                    for (let k = 0; k < freq; k++) {
+                        // Launch time (in full cycle) for this candidate wave.
+                        let launchTime = n * totalCycleDuration + sourcePauseDuration + (k / freq) * waveBurstDuration;
+                        let age = currentTimeEffective - launchTime;
+                        if (age < 0 || age > waveLife) continue;
+                        let t_effect = age / waveLife; // normalized age (0 to 1)
+                        let r_wave = t_effect * 23;      // candidate wavefront position (in cell units)
+                        let diff = Math.abs(dGroup - r_wave);
+                        if (diff < threshold) {
+                            let effect = (1 - (diff / threshold)) * (1 - dGroup / 23);
+                            let candidateScale = 1 + effect * amplitude;
+                            if (candidateScale > maxScale) { maxScale = candidateScale; }
+                        }
+                    }
+                }
+                fontSize = fontSize * maxScale;
+            }
+        }
+    }
+}
+// --- End Source Group vs. Wave Scaling Branch ---
+
+
           ctx.font = `bold ${fontSize}px Gotham, sans-serif`;
           ctx.fillStyle = "#37DFEF";
           ctx.textAlign = "center";
@@ -1745,8 +1134,7 @@
              let key = cell.i + "," + cell.j;
              if (activeSourceGroup &&
                  (key === activeSourceGroup.source_i + "," + activeSourceGroup.source_j ||
-                  activeSourceGroup.partners.includes(key)) &&
-                 isTwitchFrame) {
+                  activeSourceGroup.partners.includes(key))) {
                return;
              }
              let pos = getCellScreenPos(cell.i, cell.j, cell);
@@ -1853,9 +1241,7 @@
          }
       }
       
-      if (activeSourceGroup && isTwitchFrame && !depositAnimating && !punishActive) {
-         drawSourceGroupTwitch();
-      }
+
       
       if (punishActive) {
          drawSourceGroupPunish();
@@ -1866,57 +1252,7 @@
       requestAnimationFrame(draw);
     }
     
-    function drawSourceGroupTwitch() {
-      const now = performance.now();
-      const currentTimeSec = now / 1000;
-      let cyclePeriod = activeSourceGroup.period * 1000;
-      let cycleTime = now - activeSourceGroup.startTime;
-      let interval = 1000 / activeSourceGroup.frequency;
-      if ((cycleTime % cyclePeriod) < 1000 && ((cycleTime % 1000) % interval) < 90) {
-         const cellSize = baseCellSize * zoomFactor;
-         const effectiveBaseFont = 16 * zoomFactor;
-         let sourceKey = activeSourceGroup.source_i + "," + activeSourceGroup.source_j;
-         let sourceData = repopulatedCells[sourceKey] ? repopulatedCells[sourceKey] : activeSourceGroup.sourceData;
-         let sourcePos = getCellScreenPos(activeSourceGroup.source_i, activeSourceGroup.source_j, sourceData);
-         let d = Math.hypot(sourcePos.x - currentMousePos.x, sourcePos.y - currentMousePos.y);
-         let capturedSource = capturedGroup ? capturedGroup.cells.find(cell => cell.i === activeSourceGroup.source_i && cell.j === activeSourceGroup.source_j) : null;
-         let normalFontSize = capturedSource ? capturedSource.capturedFont
-                                            : (effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d/(2 * cellSize))));
-         ctx.shadowColor = "#FFFFFF";
-         ctx.shadowBlur = 8;
-         ctx.font = `bold ${normalFontSize * 1.08}px Gotham, sans-serif`;
-         ctx.fillStyle = "#37DFEF";
-         ctx.textAlign = "center";
-         ctx.textBaseline = "middle";
-         ctx.fillText(sourceData.digit, sourcePos.x, sourcePos.y);
-         ctx.shadowBlur = 0;
-         
-         activeSourceGroup.partners.forEach(partnerKey => {
-            let parts = partnerKey.split(",");
-            let i = parseInt(parts[0], 10);
-            let j = parseInt(parts[1], 10);
-            let partnerData = repopulatedCells[partnerKey] ? repopulatedCells[partnerKey] : getCellData(i, j);
-            let partnerPos = getCellScreenPos(i, j, partnerData);
-            let d_p = Math.hypot(partnerPos.x - currentMousePos.x, partnerPos.y - currentMousePos.y);
-            let capturedPartner = capturedGroup ? capturedGroup.cells.find(cell => cell.i === i && cell.j === j) : null;
-            let partnerFontSize = capturedPartner ? capturedPartner.capturedFont
-                                                  : (effectiveBaseFont + (24 * zoomFactor * Math.max(0, 1 - d_p/(2 * cellSize))));
-            ctx.shadowColor = "#FFFFFF";
-            ctx.shadowBlur = 8;
-            ctx.font = `bold ${partnerFontSize}px Gotham, sans-serif`;
-            ctx.fillStyle = "#37DFEF";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            let dx = partnerPos.x - sourcePos.x;
-            let dy = partnerPos.y - sourcePos.y;
-            let len = Math.sqrt(dx*dx + dy*dy) || 1;
-            let offsetX = 4 * (dx / len);
-            let offsetY = 4 * (dy / len);
-            ctx.fillText(partnerData.digit, partnerPos.x + offsetX, partnerPos.y + offsetY);
-            ctx.shadowBlur = 0;
-         });
-      }
-    }
+
     
     draw();
     setTimeout(safeInitSourceGroup, 2000);
@@ -2022,7 +1358,7 @@
         processedImg.style.filter = "drop-shadow(0 0 7px #37dfef)";
 
       processedImg.style.opacity = 0; // start hidden
-      processedImg.style.animation = 'fadeIn 2s ease-out forwards';
+      processedImg.style.animation = 'fadeIn 3s ease-out forwards';
 
       processedImg.id = "processedImg";
       const globeContainer = document.getElementById("globeContainer");
@@ -2062,7 +1398,7 @@
   <svg id="fullScreenOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" 
       xmlns="http://www.w3.org/2000/svg" 
       style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
-    <path fill="#00122b" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
+    <path fill="#054157" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
   </svg>
 
   <script>
