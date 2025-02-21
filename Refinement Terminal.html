@@ -265,7 +265,7 @@
     style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
     <path fill="#011631" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
   </svg>
-  
+
   <script>
     (function(){
       "use strict";
@@ -786,6 +786,27 @@
         });
         return count;
       }
+
+      // Function to save the current progress
+      function saveProgress() {
+        const progressState = {
+          fileProgress: getFileProgress(),      // Replace with your logic to get file progress
+          binsData: getBinsData(),              // Replace with your logic to get bin progress
+          footerPosition: getFooterPosition()   // Replace with your logic to get footerText position
+        };
+        localStorage.setItem('refinementProgress', JSON.stringify(progressState));
+      }
+
+      // Function to load saved progress
+      function loadProgress() {
+        const savedProgress = localStorage.getItem('refinementProgress');
+        if (savedProgress) {
+          const progressState = JSON.parse(savedProgress);
+          restoreFileProgress(progressState.fileProgress);
+          restoreBinsData(progressState.binsData);
+          restoreFooterPosition(progressState.footerPosition);
+        }
+      }
   
       /* ==================================================
          4. Main Animation & Drawing Loop
@@ -1226,30 +1247,7 @@
       window.addEventListener('beforeunload', saveProgress);
 
     })();
-  </script>
-  
-  <script>
-          // Function to save the current progress
-          function saveProgress() {
-        const progressState = {
-          fileProgress: getFileProgress(),      // Replace with your logic to get file progress
-          binsData: getBinsData(),              // Replace with your logic to get bin progress
-          footerPosition: getFooterPosition()   // Replace with your logic to get footerText position
-        };
-        localStorage.setItem('refinementProgress', JSON.stringify(progressState));
-      }
-
-      // Function to load saved progress
-      function loadProgress() {
-        const savedProgress = localStorage.getItem('refinementProgress');
-        if (savedProgress) {
-          const progressState = JSON.parse(savedProgress);
-          restoreFileProgress(progressState.fileProgress);
-          restoreBinsData(progressState.binsData);
-          restoreFooterPosition(progressState.footerPosition);
-        }
-      }
-  </script>
+  </script> 
 
 </body>
 </html>
