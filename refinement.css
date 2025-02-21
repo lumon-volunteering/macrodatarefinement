@@ -8,6 +8,11 @@ html, body {
   background: #001C2E;
 }
 
+@keyframes fadeIn {
+  from {opacity: 0; }
+  to { opacity: 1; }
+}
+
 #fullScreenOverlay {
     position: fixed;
     top: 0;
@@ -116,16 +121,26 @@ html, body {
     /* Similarly, the height will be the smaller of:
       - 100vh, or
       - 100vw divided by 1.5 */
+    max-width: 65vw;
     height: calc(min(90vh, 90vw / 1.5));
     background: #001c2e;
     position: relative;
-    margin-left: -450px;
+    left: -15vw;
     /* Optionally add a border or other styling for debugging */
     border-radius: 100px;
     overflow: hidden;
     cursor: none;
   }
 
+  #camera {
+    position: absolute;
+    top: 0;           /* at the top edge of appContainer */
+    left: 50%;        /* centered horizontally within appContainer */
+    transform: translateX(-50%);
+    width: 10%;       /* or any relative size to scale with appContainer */
+    height: auto;     /* preserves aspect ratio */
+  }
+  
   #customCursor {
   position: fixed;
   pointer-events: none;
@@ -228,7 +243,7 @@ html, body {
     height: 100%;
     pointer-events: none;
     z-index: 1;
-    background: url("data:image/svg+xml;utf8,\
+    background: url("data:image/svg+xml;utf8\
 <svg xmlns='http://www.w3.org/2000/svg' width='1250' height='40' viewBox='0 0 1250 40'>\
 <rect width='1250' height='40' fill='%23001C2E'/>\
 <g stroke='%2300f0ff'>\
@@ -471,15 +486,16 @@ html, body {
     background: #37DFEF;
     transform: rotate(0deg);
     transition: transform 1s;
-    z-index: 7;
+    z-index: 4;
+    visibility: hidden;
   }
 
   .lid.left { left: 0; transform-origin: top left; }
   .lid.right { right: 0; transform-origin: top right; }
   .bin.open .lid.left { transform: rotate(-135deg); }
   .bin.open .lid.right { transform: rotate(135deg); }
-  .bin.closing .lid.left { transform: rotate(135deg); }
-  .bin.closing .lid.right { transform: rotate(-135deg); }
+  .bin.closing .lid.left { transform: rotate(90deg); }
+  .bin.closing .lid.right { transform: rotate(-90deg); }
 
   .lid-duplicate {
     position: absolute;
@@ -489,15 +505,16 @@ html, body {
     background: #37DFEF;
     transform: rotate(0deg);
     transition: transform 1s, top 1s;
-    z-index: 7;
+    z-index: 4;
+    visibility: hidden;
   }
 
   .lid-duplicate.left { left: 0; transform-origin: left center; }
   .lid-duplicate.right { right: 0; transform-origin: right center; }
   .bin.open .lid-duplicate.left { transform: rotate(-135deg); top: -20px; }
   .bin.open .lid-duplicate.right { transform: rotate(135deg); top: -20px; }
-  .bin.closing .lid-duplicate.left { transform: rotate(135deg); top: -20px; }
-  .bin.closing .lid-duplicate.right { transform: rotate(-135deg); top: -20px; }
+  .bin.closing .lid-duplicate.left { transform: rotate(90deg); top: -20px; }
+  .bin.closing .lid-duplicate.right { transform: rotate(-90deg); top: -20px; }
 
   #connectorContainer {
     position: relative;
@@ -589,7 +606,6 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    scale: 0.9;
     background: #001C2E;
     border: 3px solid #37DFEF;
     text-align: center;
@@ -601,7 +617,7 @@ html, body {
     position: relative;
     display: flex;
     align-items: center;
-    width: 90%;
+    width: 95%;
     height: 40px;
     padding: 5px;
   }
