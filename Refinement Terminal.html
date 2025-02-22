@@ -17,18 +17,18 @@
               <div id="titleBox">
                 <div id="globeContainer">
                   <svg width="300" height="150" viewBox="0 0 300 150">
-                    <ellipse cx="150" cy="75" rx="150" ry="75" fill="#001C2E" stroke="#37DFEF" stroke-width="4"/>
-                    <line x1="30" y1="30" x2="270" y2="30" stroke="#37DFEF" stroke-width="4"/>
-                    <line x1="30" y1="120" x2="270" y2="120" stroke="#37DFEF" stroke-width="4"/>
-                    <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
-                    <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
-                    <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
-                    <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#37DFEF" stroke-width="4"/>
+                    <ellipse cx="150" cy="75" rx="150" ry="75" fill="#001C2E" stroke="#8ef1fa" stroke-width="4"/>
+                    <line x1="30" y1="30" x2="270" y2="30" stroke="#8ef1fa" stroke-width="4"/>
+                    <line x1="30" y1="120" x2="270" y2="120" stroke="#8ef1fa" stroke-width="4"/>
+                    <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+                    <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+                    <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+                    <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
                     <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none"/>
                   </svg>
                   <div id="totalProgressText">0% Complete</div>
                 </div>
-                <div id="totalProgressName">Dranesville</div>
+                <div id="totalProgressName">Pathfinder</div>
                 <div id="totalProgressFill"></div>
                 <div id="progressBlocker"></div>
               </div>
@@ -311,58 +311,6 @@
         "04": { WO: 0, FC: 0, DR: 0, MA: 0 },
         "05": { WO: 0, FC: 0, DR: 0, MA: 0 }
       };
-      const progressState = {
-        fileProgress: {
-        "Allentown": 0,
-        "Astoria": 0,
-        "Bellingham": 0,
-        "Cairnes": 0,
-        "Chicxulub": 0,
-        "Cielo": 0,
-        "Cold Harbor": 0,
-        "Coleman": 0,
-        "Culpepper": 0,
-        "Dranesville": 0,
-        "Eau Claire": 0,
-        "Eminence": 0,
-        "Erie": 0,
-        "Fort Dodge": 0,
-        "Gold Coast": 0,
-        "Grimaldi": 0,
-        "Grimsby": 0,
-        "Hefei": 0,
-        "Homestead": 0,
-        "Horseshoe Bend": 0,
-        "Jaspur": 0,
-        "Jesup": 0,
-        "Kingsport": 0,
-        "Labrador": 0,
-        "Le Mars": 0,
-        "Lexington": 0,
-        "Longbranch": 0,
-        "Minsk": 0,
-        "Montauk": 0,
-        "Moonbeam": 0,
-        "Morioka": 0,
-        "Nanning": 0,
-        "Narva": 0,
-        "Ocula": 0,
-        "Pacoima": 0,
-        "Santa Mira": 0,
-        "Siena": 0,
-        "Sunset Park": 0,
-        "Tan An": 0,
-        "Tumwater": 0,
-        "Yakima": 0
-        },
-
-        binsData: binsData,
-
-        footerPosition: {
-          x: gridOffset.x,
-          y: gridOffset.y
-        }
-    };
   
       /* ==================================================
          2. DOM Element Caching
@@ -395,12 +343,13 @@
       // 
       //
       //               CHECKPOINT - PROGRESS PERCENT
-      //               (adjust 2000 to smaller number for faster file completion)
+      //               (adjust difficultyFactor to smaller number for faster file completion) (2000 default)
       //
 
       // Update overall progress display.
       function updateOverallProgress() {
-        const percentage = (totalProgressPoints / 2000) * 100;
+        let difficultyFactor = 2
+        const percentage = (totalProgressPoints / difficultyFactor) * 100;
         totalProgressText.textContent = Math.floor(percentage) + "% Complete";
         progressBlocker.style.transform = `translateX(${percentage}%)`;
       }
@@ -523,7 +472,7 @@
       // Animate the temper chart rising for the given bin.
       function animateTempersChart(binId, callback) {
         const chart = document.querySelector(`.binChart[data-bin="${binId}"]`);
-        chart.style.height = "220px";
+        chart.style.height = "240px";
         // Force reflow.
         void chart.offsetHeight;
         setTimeout(() => {
@@ -787,27 +736,6 @@
         return count;
       }
 
-      // Function to save the current progress
-      function saveProgress() {
-        const progressState = {
-          fileProgress: getFileProgress(),      // Replace with your logic to get file progress
-          binsData: getBinsData(),              // Replace with your logic to get bin progress
-          footerPosition: getFooterPosition()   // Replace with your logic to get footerText position
-        };
-        localStorage.setItem('refinementProgress', JSON.stringify(progressState));
-      }
-
-      // Function to load saved progress
-      function loadProgress() {
-        const savedProgress = localStorage.getItem('refinementProgress');
-        if (savedProgress) {
-          const progressState = JSON.parse(savedProgress);
-          restoreFileProgress(progressState.fileProgress);
-          restoreBinsData(progressState.binsData);
-          restoreFooterPosition(progressState.footerPosition);
-        }
-      }
-  
       /* ==================================================
          4. Main Animation & Drawing Loop
       ================================================== */
@@ -1015,7 +943,7 @@
               binsEls.forEach(bin => bin.classList.remove("open"));
               binAnimationActive = false;
               inputLocked = false;
-              setTimeout(safeInitSourceGroup, 5000 + Math.random() * 15000);
+              setTimeout(safeInitSourceGroup, 5000 + Math.random() * 6000);
             });
           }
         }
@@ -1242,9 +1170,6 @@
           cursor.style.top = e.clientY + 'px';
         }
       });
-
-      window.addEventListener('load', loadProgress);
-      window.addEventListener('beforeunload', saveProgress);
 
     })();
   </script> 
