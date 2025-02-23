@@ -330,7 +330,7 @@
       let punishActive = false;
       let punishStartTime = 0;
       let totalProgressPoints = 0;
-      const binsData = {
+      let binsData = {
         "01": { WO: 0, FC: 0, DR: 0, MA: 0 },
         "02": { WO: 0, FC: 0, DR: 0, MA: 0 },
         "03": { WO: 0, FC: 0, DR: 0, MA: 0 },
@@ -1094,12 +1094,6 @@
       /* ==================================================
          7. Additional Features
       ================================================== */
-      // Update totalProgressName from the "filename" query parameter.
-      window.addEventListener("DOMContentLoaded", function() {
-        const params = new URLSearchParams(window.location.search);
-        const filename = params.get("filename");
-        if (filename) totalProgressName.textContent = filename;
-      });
   
       // Process the Lumon logo image and append it to the globe container.
       window.addEventListener("load", function() {
@@ -1205,7 +1199,79 @@
         }
       });
 
+      /* ==================================================
+         8. Progress Saving
+      ================================================== */
+
+          // Update totalProgressName from the "filename" query parameter.
+          const params = new URLSearchParams(window.location.search);
+          const filename = params.get("filename")|| 'Pathfinder';
+          window.addEventListener("DOMContentLoaded", function() {
+            if (filename) totalProgressName.textContent = filename;
+          });
+          
+          // Function to load progress data from localStorage
+          function loadProgress() {
+            const key = 'progress_' + filename;
+            const savedState = localStorage.getItem('progressState');
+            if (savedState) {
+              try {
+                const state = JSON.parse(savedState);
+                if (typeof state.totalProgressPoints !== 'undefined') {
+                  totalProgressPoints = state.totalProgressPoints;
+                }
+                if (state.binsData) {
+                  binsData = state.binsData;
+                }
+                if (state.hexOffset) {
+                  const xVal = Number(state.hexOffset.x);
+                  const yVal = Number(state.hexOffset.y);
+                  hexOffset.x = isNaN(xVal) ? 0 : xVal;
+                  hexOffset.y = isNaN(yVal) ? 0 : yVal;
+                }
+                console.log(filename, "progress loaded:", state);
+              } catch (error) {
+                console.error("Error parsing saved progress for", filename, ":", error);
+              }
+            } else {
+              console.log("No saved progress for", filename);
+            }
+          }
+        
+          // Function to save progress data to localStorage
+          function saveProgress() {
+            const key = 'progress_' + filename;
+            const state = {
+              totalProgressPoints: totalProgressPoints,
+              binsData: binsData,
+              hexOffset: { x: hexOffset.x, y: hexOffset.y }
+            };
+            try {
+              localStorage.setItem('progressState', JSON.stringify(state));
+              console.log("Progress saved for", filename, ":", state);
+            } catch (error) {
+              console.error("Error saving progress for", filename, ":", error);
+            }
+          }
+        
+          // Load progress when the page loads
+          window.addEventListener('load', loadProgress);
+          // Save progress just before the page is unloaded
+          window.addEventListener('beforeunload', saveProgress);
+          window.addEventListener('pagehide', saveProgress);
+          
+          // This ensures the progress bars are correct on page load.
+          window.addEventListener('load', function() {
+            // Call updateOverallProgress to update the overall progress display.
+            updateOverallProgress();
+            // Call updateBinProgress for each bin
+            for (const binId in binsData) {
+              updateBinProgress(binId);
+            }
+          });
+
     })();
+
   </script> 
 
     <script> 
@@ -1263,51 +1329,7 @@
     </script>
 
     <script>
-      (function() {
-        // Function to load progress data from localStorage
-        function loadProgress() {
-          const savedState = localStorage.getItem('progressState');
-          if (savedState) {
-            try {
-              const state = JSON.parse(savedState);
-              if (typeof state.totalProgressPoints !== 'undefined') {
-                totalProgressPoints = state.totalProgressPoints;
-              }
-              if (state.binsData) {
-                binsData = state.binsData;
-              }
-              if (state.hexOffset) {
-                hexOffset = state.hexOffset;
-              }
-              console.log("Progress loaded:", state);
-            } catch (error) {
-              console.error("Error parsing saved progress:", error);
-            }
-          } else {
-            console.log("No saved progress found.");
-          }
-        }
       
-        // Function to save progress data to localStorage
-        function saveProgress() {
-          const state = {
-            totalProgressPoints: totalProgressPoints,
-            binsData: binsData,
-            hexOffset: hexOffset
-          };
-          try {
-            localStorage.setItem('progressState', JSON.stringify(state));
-            console.log("Progress saved:", state);
-          } catch (error) {
-            console.error("Error saving progress:", error);
-          }
-        }
-      
-        // Load progress when the page loads
-        window.addEventListener('load', loadProgress);
-        // Save progress just before the page is unloaded
-        window.addEventListener('beforeunload', saveProgress);
-      })();
       </script>
   
 

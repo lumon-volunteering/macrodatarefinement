@@ -144,14 +144,6 @@
     style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
     <path fill="#011631" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
   </svg>
-
-  <button id="controlButton">
-    <svg class="innerStar" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <polygon 
-          points="50,0 61.48,22.28 85.36,14.64 77.72,38.52 100,50 77.72,61.48 85.36,85.36 61.48,77.72 50,100 38.52,77.72 14.64,85.36 22.28,61.48 0,50 22.28,38.52 14.64,14.64 38.52,22.28" 
-          fill="#141414" stroke="#141414" stroke-width="8" stroke-linejoin="round"/>
-      </svg>
- </button>
   
   <script>
     // Animation settings
@@ -534,43 +526,14 @@
     </script>
   
 
-   <script>
-    document.addEventListener('mousemove', function(e) {
-      var cursor = document.getElementById('customCursor');
-      cursor.style.left = e.clientX + 'px';
-      cursor.style.top = e.clientY + 'px';
-    });
+    <script>
+      document.addEventListener('mousemove', function(e) {
+        var cursor = document.getElementById('customCursor');
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+      });
     </script>
 
-    <script>
-      let isOpen = true; // initial state: appContainer is open
-
-      const controlButton = document.getElementById("controlButton");
-      const appContainer   = document.getElementById("appContainer");
-
-      controlButton.addEventListener("click", function() {
-          if (isOpen) {
-          // Close the appContainer
-          appContainer.classList.remove("openAnim");
-          appContainer.classList.add("closeAnim");
-          controlButton.classList.add("rotated"); // rotate 120° clockwise (from -60° to 60°)
-          isOpen = false;
-          } else {
-          // Open the appContainer
-          appContainer.classList.remove("closeAnim");
-          appContainer.classList.add("openAnim");
-          controlButton.classList.remove("rotated"); // rotate back 120° anticlockwise to original (-60°)
-          isOpen = true;
-          }
-      });
-
-      // After the animation ends, remove the temporary animation classes so they can be triggered again.
-      appContainer.addEventListener("animationend", function(e) {
-          if (e.animationName === "openAnimation") {
-              appContainer.classList.remove("openAnim");
-          }
-      });
-      </script>
 
       <script> 
         // Inactivity timer variables
@@ -623,26 +586,6 @@
           requestAnimationFrame(animateGlobe);
         }
         animateGlobe();
-
-      </script>
-
-      <script>
-        function loadProgressPercent() {
-          // Assume the file name is displayed in an element with ID "staticTopName"
-          const fileName = document.getElementById('staticTopName').textContent;
-          const stored = localStorage.getItem("progress_" + fileName);
-          if (stored) {
-            const progressData = JSON.parse(stored);
-            const totalProgress = progressData.totalProgressText || "0%";
-            document.getElementById("totalProgressPercent").textContent = totalProgress;
-          } else {
-            // If no progress is stored, default to 0%
-            document.getElementById("totalProgressPercent").textContent = "0%";
-          }
-        }
-
-        window.addEventListener("load", loadProgressPercent);
-
 
       </script>
 
