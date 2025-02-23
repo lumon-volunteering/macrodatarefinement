@@ -26,7 +26,6 @@ html, body {
 
   /* Fullscreen wrapper using Grid to center content */
   #pageWrapper {
-    position: relative;
     display: grid;
     place-items: center;
     width: 100vw;

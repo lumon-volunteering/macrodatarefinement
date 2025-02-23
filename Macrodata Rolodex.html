@@ -22,7 +22,6 @@
   <div id="pageWrapper">
     <img id="sticky1" src="sticky1.png" alt="sticky1">
     <img id="sticky2" src="sticky2.png" alt="sticky2">
-    <div id="offScreen">
       <div id="appContainer" class="crt">
 
         <div id="bouncingGlobeOverlay">
@@ -135,7 +134,7 @@
           <img src="cursor.png" alt="custom cursor">
           </div>
 
-      </div>
+
     </div>
   </div>
 
@@ -526,24 +525,12 @@
         pathElement.setAttribute('d', d);
       }
 
-      // Update button position so it sits to the right of appContainer’s “hole”
-      function updateButtonPosition() {
-      const appContainer = document.getElementById('appContainer');
-      const button = document.getElementById('controlButton');
-      const rect = appContainer.getBoundingClientRect();
-      // Position the button 10px to the right of appContainer and vertically centered.
-      button.style.left = (rect.right + 250) + 'px';
-      button.style.top = (rect.height / 1.1) + 'px';
-      }
-
   
       window.addEventListener('resize', function() {
       updateOverlayHole();
-      updateButtonPosition();
       });
       window.addEventListener('scroll', updateOverlayHole);
       updateOverlayHole();
-      updateButtonPosition();
     </script>
   
 

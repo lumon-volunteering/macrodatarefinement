@@ -10,7 +10,6 @@
   <div id="pageWrapper">
     <img id="sticky1" src="sticky1.png" alt="sticky1">
     <img id="sticky2" src="sticky2.png" alt="sticky2">
-    <div id="offScreen"></div>
       <div id="appContainer" class="crt">
 
         <div id="bouncingGlobeOverlay">
@@ -274,7 +273,7 @@
 
 
 
-      </div>
+      
   </div>
 
   <!-- Full-screen overlay SVG -->
@@ -314,6 +313,7 @@
   
       let pageLoadStart = performance.now();
       let gridOffset = { x: 0, y: 0 };
+      let hexOffset = { x: 0, y : 0 }
       let keysPressed = {};
       let removedCells = new Set();
       let repopulatedCells = {};
@@ -356,8 +356,8 @@
 
       function updateFooterWithHexOffsets() {
         const cellSize = 40;
-        let offsetX = Math.floor(gridOffset.x / cellSize);
-        let offsetY = Math.floor(gridOffset.y / cellSize);
+        let offsetX = Math.floor(hexOffset.x / cellSize);
+        let offsetY = Math.floor(hexOffset.y / cellSize);
         let hexX = "0x" + Math.abs(offsetX).toString(16).padStart(2, "0").toUpperCase();
         let hexY = "0x" + Math.abs(offsetY).toString(16).padStart(2, "0").toUpperCase();
         document.getElementById("footerText").textContent = `${hexX}  :  ${hexY}`;
@@ -778,6 +778,14 @@
           if (keysPressed["ArrowLeft"] || keysPressed["a"] || keysPressed["A"]) gridOffset.x -= moveSpeed;
           if (keysPressed["ArrowRight"] || keysPressed["d"] || keysPressed["D"]) gridOffset.x += moveSpeed;
         }
+
+        if (!depositAnimating && !capturedGroup) {
+          const moveSpeed = 2;
+          if (keysPressed["ArrowUp"] || keysPressed["w"] || keysPressed["W"]) hexOffset.y -= moveSpeed;
+          if (keysPressed["ArrowDown"] || keysPressed["s"] || keysPressed["S"]) hexOffset.y += moveSpeed;
+          if (keysPressed["ArrowLeft"] || keysPressed["a"] || keysPressed["A"]) hexOffset.x -= moveSpeed;
+          if (keysPressed["ArrowRight"] || keysPressed["d"] || keysPressed["D"]) hexOffset.x += moveSpeed;
+        }
   
         for (let i = Math.floor(gridOffset.x / cellSize) - 2; i <= Math.floor((gridOffset.x + canvas.width) / cellSize) + 2; i++) {
           for (let j = Math.floor(gridOffset.y / cellSize) - 2; j <= Math.floor((gridOffset.y + canvas.height) / cellSize) + 2; j++) {
@@ -1168,23 +1176,11 @@
         pathElement.setAttribute('d', d);
       }
 
-      // Update button position so it sits to the right of appContainer’s “hole”
-      function updateButtonPosition() {
-      const appContainer = document.getElementById('appContainer');
-      const button = document.getElementById('controlButton');
-      const rect = appContainer.getBoundingClientRect();
-      // Position the button 10px to the right of appContainer and vertically centered.
-      button.style.left = (rect.right + 250) + 'px';
-      button.style.top = (rect.height / 1.1) + 'px';
-      }
-
       window.addEventListener('resize', function() {
       updateOverlayHole();
-      updateButtonPosition();
       });
       window.addEventListener('scroll', updateOverlayHole);
       updateOverlayHole();
-      updateButtonPosition();
   
       // Custom Cursor: ensure it follows the mouse.
       window.addEventListener("DOMContentLoaded", function() {
@@ -1211,36 +1207,6 @@
 
     })();
   </script> 
-
-  <script>
-    let isOpen = true; // initial state: appContainer is open
-
-    const controlButton = document.getElementById("controlButton");
-    const appContainer   = document.getElementById("appContainer");
-
-    controlButton.addEventListener("click", function() {
-        if (isOpen) {
-        // Close the appContainer
-        appContainer.classList.remove("openAnim");
-        appContainer.classList.add("closeAnim");
-        controlButton.classList.add("rotated"); // rotate 120° clockwise (from -60° to 60°)
-        isOpen = false;
-        } else {
-        // Open the appContainer
-        appContainer.classList.remove("closeAnim");
-        appContainer.classList.add("openAnim");
-        controlButton.classList.remove("rotated"); // rotate back 120° anticlockwise to original (-60°)
-        isOpen = true;
-        }
-    });
-
-    // After the animation ends, remove the temporary animation classes so they can be triggered again.
-    appContainer.addEventListener("animationend", function(e) {
-        if (e.animationName === "openAnimation") {
-            appContainer.classList.remove("openAnim");
-        }
-    });
-    </script>
 
     <script> 
       // Inactivity timer variables
@@ -1295,6 +1261,55 @@
       animateGlobe();
 
     </script>
+
+    <script>
+      (function() {
+        // Function to load progress data from localStorage
+        function loadProgress() {
+          const savedState = localStorage.getItem('progressState');
+          if (savedState) {
+            try {
+              const state = JSON.parse(savedState);
+              if (typeof state.totalProgressPoints !== 'undefined') {
+                totalProgressPoints = state.totalProgressPoints;
+              }
+              if (state.binsData) {
+                binsData = state.binsData;
+              }
+              if (state.hexOffset) {
+                hexOffset = state.hexOffset;
+              }
+              console.log("Progress loaded:", state);
+            } catch (error) {
+              console.error("Error parsing saved progress:", error);
+            }
+          } else {
+            console.log("No saved progress found.");
+          }
+        }
+      
+        // Function to save progress data to localStorage
+        function saveProgress() {
+          const state = {
+            totalProgressPoints: totalProgressPoints,
+            binsData: binsData,
+            hexOffset: hexOffset
+          };
+          try {
+            localStorage.setItem('progressState', JSON.stringify(state));
+            console.log("Progress saved:", state);
+          } catch (error) {
+            console.error("Error saving progress:", error);
+          }
+        }
+      
+        // Load progress when the page loads
+        window.addEventListener('load', loadProgress);
+        // Save progress just before the page is unloaded
+        window.addEventListener('beforeunload', saveProgress);
+      })();
+      </script>
+  
 
 </body>
 </html>
