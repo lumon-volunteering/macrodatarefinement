@@ -36,19 +36,12 @@ html, body {
   /* The inner container that always maintains a 1.5:1 ratio.
     It will expand to the maximum size that fits inside the viewport. */
   #appContainer {
-    /* The width will be the smaller of:
-      - 100vw, or
-      - 1.5 times 100vh (since 1.5:1 means width = 1.5 x height) */
-    width: calc(min(90vw, 1.5 * 85vh));
-    /* Similarly, the height will be the smaller of:
-      - 100vh, or
-      - 100vw divided by 1.5 */
-    max-width: 65vw;
-    height: calc(min(90vh, 90vw / 1.5));
-    background: #001c2e;
     position: relative;
+    width: calc(min(90vw, 1.5 * 85vh));
+    height: calc(min(90vh, 90vw / 1.5));
+    max-width: 65vw;
+    background: #001c2e;
     left: -15vw;
-    /* Optionally add a border or other styling for debugging */
     border-radius: 100px;
     overflow: hidden;
     cursor: none;
@@ -111,6 +104,9 @@ html, body {
     position: relative;
     width: 100%;
     height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     opacity: 0;
     animation: fadeIn 2s ease-out forwards;
   }

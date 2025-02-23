@@ -270,9 +270,7 @@
           </div>
 
         </div> <!-- end of #mainContainer -->
-
-
-
+      </div> <!-- end of appContainer -->
       
   </div>
 
@@ -772,7 +770,7 @@
         const cellSize = settings.baseCellSize * settings.zoomFactor;
   
         if (!depositAnimating && !capturedGroup) {
-          const moveSpeed = 2;
+          const moveSpeed = 1.5; //adjust for different scroll speed
           if (keysPressed["ArrowUp"] || keysPressed["w"] || keysPressed["W"]) gridOffset.y -= moveSpeed;
           if (keysPressed["ArrowDown"] || keysPressed["s"] || keysPressed["S"]) gridOffset.y += moveSpeed;
           if (keysPressed["ArrowLeft"] || keysPressed["a"] || keysPressed["A"]) gridOffset.x -= moveSpeed;
@@ -780,7 +778,7 @@
         }
 
         if (!depositAnimating && !capturedGroup) {
-          const moveSpeed = 2;
+          const moveSpeed = 1.5 ; //adjust for different scroll speed
           if (keysPressed["ArrowUp"] || keysPressed["w"] || keysPressed["W"]) hexOffset.y -= moveSpeed;
           if (keysPressed["ArrowDown"] || keysPressed["s"] || keysPressed["S"]) hexOffset.y += moveSpeed;
           if (keysPressed["ArrowLeft"] || keysPressed["a"] || keysPressed["A"]) hexOffset.x -= moveSpeed;
@@ -1213,7 +1211,7 @@
           // Function to load progress data from localStorage
           function loadProgress() {
             const key = 'progress_' + filename;
-            const savedState = localStorage.getItem('progressState');
+            const savedState = localStorage.getItem(key);
             if (savedState) {
               try {
                 const state = JSON.parse(savedState);
@@ -1247,7 +1245,7 @@
               hexOffset: { x: hexOffset.x, y: hexOffset.y }
             };
             try {
-              localStorage.setItem('progressState', JSON.stringify(state));
+              localStorage.setItem(key, JSON.stringify(state));
               console.log("Progress saved for", filename, ":", state);
             } catch (error) {
               console.error("Error saving progress for", filename, ":", error);

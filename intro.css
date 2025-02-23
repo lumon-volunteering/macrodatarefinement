@@ -42,13 +42,12 @@
                 /* The inner container that always maintains a 1.5:1 ratio.
                 It will expand to the maximum size that fits inside the viewport. */
                 #appContainer {
-    
+                position: relative;
                 width: calc(min(90vw, 1.5 * 85vh));
                 height: calc(min(90vh, 90vw / 1.5));
                 max-width: 65vw;
-                left: -15vw;
                 background: #001c2e;
-                z-index: 3;
+                left: -15vw;
                 border-radius: 100px;
                 overflow: hidden;
                 cursor: none;
