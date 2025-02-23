@@ -22,6 +22,23 @@
   <div id="pageWrapper">
     <div id="offScreen">
       <div id="appContainer" class="crt">
+
+        <div id="bouncingGlobeOverlay">
+          <!-- Example globe SVG – replace with your actual globeSvg if needed -->
+          <svg id="globeSvg" width="300" height="150" viewBox="-4 -4 308 158">
+            <g class="glow">
+              <ellipse cx="150" cy="75" rx="150" ry="75" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <line x1="30" y1="30" x2="270" y2="30" stroke="#8ef1fa" stroke-width="4"/>
+              <line x1="30" y1="120" x2="270" y2="120" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+            </g>
+              <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none" filter="none"!important/>
+            </svg>
+        </div>
+
         <!-- Hidden white glow filter -->
         <svg width="0" height="0" xmlns="http://www.w3.org/2000/svg" style="position: absolute;">
           <filter id="whiteGlow">
@@ -63,6 +80,7 @@
                 </svg>
               </div>
               <div class="static-file-name" id="staticTopName"></div>
+              <div id="totalProgressPercent">0%</div>
             </div>
             <!-- Static Bottom Tile (only tab; no filename) -->
             <div id="staticBottom" class="static">
@@ -565,6 +583,79 @@
       });
       </script>
 
+      <script> 
+        // Inactivity timer variables
+        const overlay = document.getElementById('bouncingGlobeOverlay');
+        const inactivityDuration = 30000; // 30 seconds
+        let inactivityTimer;
+
+        // Reset (or start) the inactivity timer; also ensure overlay is hidden on input.
+        function resetInactivityTimer() {
+          // Immediately hide the overlay if it’s visible.
+          overlay.style.opacity = 0;
+          clearTimeout(inactivityTimer);
+          inactivityTimer = setTimeout(() => {
+            overlay.style.opacity = 1;  // fade in after 30 seconds of no input
+            globe.style.opacity = 1;
+          }, inactivityDuration);
+        }
+
+        // Listen for any user input (mousemove, keydown, mousedown, touchstart)
+        ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => {
+          document.addEventListener(evt, resetInactivityTimer, {passive: true});
+        });
+        resetInactivityTimer();  // start the timer on page load
+
+        // Bounce animation for the globe SVG (DVD logo style)
+        const globe = document.getElementById('globeSvg');
+        let posX = 0, posY = 0;
+        let velocityX = 2, velocityY = 2;
+
+        function animateGlobe() {
+          const overlayRect = overlay.getBoundingClientRect();
+          const globeRect = globe.getBoundingClientRect();
+
+          // update position
+          posX += velocityX;
+          posY += velocityY;
+
+          // Bounce off the horizontal boundaries
+          if (posX + globeRect.width > overlayRect.width || posX < 0) {
+            velocityX = -velocityX;
+            posX = Math.max(0, Math.min(posX, overlayRect.width - globeRect.width));
+          }
+          // Bounce off the vertical boundaries
+          if (posY + globeRect.height > overlayRect.height || posY < 0) {
+            velocityY = -velocityY;
+            posY = Math.max(0, Math.min(posY, overlayRect.height - globeRect.height));
+          }
+
+          globe.style.transform = `translate(${posX}px, ${posY}px)`;
+          requestAnimationFrame(animateGlobe);
+        }
+        animateGlobe();
+
+      </script>
+
+      <script>
+        function loadProgressPercent() {
+          // Assume the file name is displayed in an element with ID "staticTopName"
+          const fileName = document.getElementById('staticTopName').textContent;
+          const stored = localStorage.getItem("progress_" + fileName);
+          if (stored) {
+            const progressData = JSON.parse(stored);
+            const totalProgress = progressData.totalProgressText || "0%";
+            document.getElementById("totalProgressPercent").textContent = totalProgress;
+          } else {
+            // If no progress is stored, default to 0%
+            document.getElementById("totalProgressPercent").textContent = "0%";
+          }
+        }
+
+        window.addEventListener("load", loadProgressPercent);
+
+
+      </script>
 
 </body>
 </html>

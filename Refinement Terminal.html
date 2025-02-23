@@ -10,21 +10,38 @@
   <div id="pageWrapper">
     <div id="offScreen">
       <div id="appContainer" class="crt">
+
+        <div id="bouncingGlobeOverlay">
+          <!-- Example globe SVG – replace with your actual globeSvg if needed -->
+          <svg id="globeSvg" width="300" height="150" viewBox="-4 -4 308 158">
+            <g class="glow">
+              <ellipse cx="150" cy="75" rx="150" ry="75" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <line x1="30" y1="30" x2="270" y2="30" stroke="#8ef1fa" stroke-width="4"/>
+              <line x1="30" y1="120" x2="270" y2="120" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+              <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+            </g>
+              <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none" filter="none"!important/>
+            </svg>
+        </div>
+
         <div id="mainContainer">
           <!-- Wrap all UI elements (except background and CRT filter) in uiContainer for fade-in -->
             <!-- Top progress area -->
             <div id="totalProgressContainer">
               <div id="titleBox">
                 <div id="globeContainer">
-                  <svg width="300" height="150" viewBox="0 0 300 150">
-                    <ellipse cx="150" cy="75" rx="150" ry="75" fill="#001C2E" stroke="#8ef1fa" stroke-width="4"/>
-                    <line x1="30" y1="30" x2="270" y2="30" stroke="#8ef1fa" stroke-width="4"/>
-                    <line x1="30" y1="120" x2="270" y2="120" stroke="#8ef1fa" stroke-width="4"/>
-                    <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-                    <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-                    <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-                    <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-                    <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none"/>
+                  <svg width="300" height="150" viewBox="-4 -4 308 158">
+                      <ellipse cx="150" cy="75" rx="150" ry="75" fill="#001C2E" stroke="#8ef1fa" stroke-width="4"/>
+                      <line x1="30" y1="30" x2="270" y2="30" stroke="#8ef1fa" stroke-width="4"/>
+                      <line x1="30" y1="120" x2="270" y2="120" stroke="#8ef1fa" stroke-width="4"/>
+                      <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+                      <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+                      <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+                      <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
+                      <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none"/>
                   </svg>
                   <div id="totalProgressText">0% Complete</div>
                 </div>
@@ -265,6 +282,14 @@
     style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
     <path fill="#011631" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
   </svg>
+
+  <button id="controlButton">
+    <svg class="innerStar" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon 
+          points="50,0 61.48,22.28 85.36,14.64 77.72,38.52 100,50 77.72,61.48 85.36,85.36 61.48,77.72 50,100 38.52,77.72 14.64,85.36 22.28,61.48 0,50 22.28,38.52 14.64,14.64 38.52,22.28" 
+          fill="#141414" stroke="#141414" stroke-width="8" stroke-linejoin="round"/>
+      </svg>
+ </button>
 
   <script>
     (function(){
@@ -1141,12 +1166,24 @@
         const d = `M0,0 H100 V100 H0 Z ${innerRounded}`;
         pathElement.setAttribute('d', d);
       }
-      window.addEventListener("resize", updateOverlayHole);
-      window.addEventListener("scroll", updateOverlayHole);
-      window.addEventListener("load", function(){
-        setTimeout(updateOverlayHole, 100);
-      });
+
+      // Update button position so it sits to the right of appContainer’s “hole”
+      function updateButtonPosition() {
+      const appContainer = document.getElementById('appContainer');
+      const button = document.getElementById('controlButton');
+      const rect = appContainer.getBoundingClientRect();
+      // Position the button 10px to the right of appContainer and vertically centered.
+      button.style.left = (rect.right + 250) + 'px';
+      button.style.top = (rect.height / 1.1) + 'px';
+      }
+
+      window.addEventListener('resize', function() {
       updateOverlayHole();
+      updateButtonPosition();
+      });
+      window.addEventListener('scroll', updateOverlayHole);
+      updateOverlayHole();
+      updateButtonPosition();
   
       // Custom Cursor: ensure it follows the mouse.
       window.addEventListener("DOMContentLoaded", function() {
@@ -1173,6 +1210,203 @@
 
     })();
   </script> 
+
+  <script>
+    let isOpen = true; // initial state: appContainer is open
+
+    const controlButton = document.getElementById("controlButton");
+    const appContainer   = document.getElementById("appContainer");
+
+    controlButton.addEventListener("click", function() {
+        if (isOpen) {
+        // Close the appContainer
+        appContainer.classList.remove("openAnim");
+        appContainer.classList.add("closeAnim");
+        controlButton.classList.add("rotated"); // rotate 120° clockwise (from -60° to 60°)
+        isOpen = false;
+        } else {
+        // Open the appContainer
+        appContainer.classList.remove("closeAnim");
+        appContainer.classList.add("openAnim");
+        controlButton.classList.remove("rotated"); // rotate back 120° anticlockwise to original (-60°)
+        isOpen = true;
+        }
+    });
+
+    // After the animation ends, remove the temporary animation classes so they can be triggered again.
+    appContainer.addEventListener("animationend", function(e) {
+        if (e.animationName === "openAnimation") {
+            appContainer.classList.remove("openAnim");
+        }
+    });
+    </script>
+
+    <script> 
+      // Inactivity timer variables
+      const overlay = document.getElementById('bouncingGlobeOverlay');
+      const inactivityDuration = 30000; // 30 seconds
+      let inactivityTimer;
+
+      // Reset (or start) the inactivity timer; also ensure overlay is hidden on input.
+      function resetInactivityTimer() {
+        // Immediately hide the overlay if it’s visible.
+        overlay.style.opacity = 0;
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          overlay.style.opacity = 1;  // fade in after 30 seconds of no input
+          globe.style.opacity = 1;
+        }, inactivityDuration);
+      }
+
+      // Listen for any user input (mousemove, keydown, mousedown, touchstart)
+      ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer, {passive: true});
+      });
+      resetInactivityTimer();  // start the timer on page load
+
+      // Bounce animation for the globe SVG (DVD logo style)
+      const globe = document.getElementById('globeSvg');
+      let posX = 0, posY = 0;
+      let velocityX = 2, velocityY = 2;
+
+      function animateGlobe() {
+        const overlayRect = overlay.getBoundingClientRect();
+        const globeRect = globe.getBoundingClientRect();
+
+        // update position
+        posX += velocityX;
+        posY += velocityY;
+
+        // Bounce off the horizontal boundaries
+        if (posX + globeRect.width > overlayRect.width || posX < 0) {
+          velocityX = -velocityX;
+          posX = Math.max(0, Math.min(posX, overlayRect.width - globeRect.width));
+        }
+        // Bounce off the vertical boundaries
+        if (posY + globeRect.height > overlayRect.height || posY < 0) {
+          velocityY = -velocityY;
+          posY = Math.max(0, Math.min(posY, overlayRect.height - globeRect.height));
+        }
+
+        globe.style.transform = `translate(${posX}px, ${posY}px)`;
+        requestAnimationFrame(animateGlobe);
+      }
+      animateGlobe();
+
+    </script>
+
+    <script>
+      // Call this function to save progress
+      function saveProgress() {
+        const progressData = {};
+
+        // Save the overall progress text
+        const totalProgressEl = document.getElementById("totalProgressText");
+        progressData.totalProgressText = totalProgressEl ? totalProgressEl.textContent : "";
+
+        // Save the current transform value of the progress blocker
+        const blockerEl = document.getElementById("progressBlocker");
+        progressData.progressBlockerTransform = blockerEl ? blockerEl.style.transform : "";
+
+        // Save progress for each bin (progress fill width and progress text)
+        progressData.bins = {};
+        document.querySelectorAll(".binProgress").forEach(binProgress => {
+          const binId = binProgress.getAttribute("data-bin");
+          const fillEl = binProgress.querySelector(".binProgressFill");
+          const textEl = binProgress.querySelector(".binProgressText.front");
+          progressData.bins[binId] = {
+            fillWidth: fillEl ? fillEl.style.width : "",
+            progressText: textEl ? textEl.textContent : ""
+          };
+        });
+
+        // Save the chart rows fill widths for each bin/chartRow
+        progressData.chartRows = {};
+        document.querySelectorAll(".binChart").forEach(binChart => {
+          const binId = binChart.getAttribute("data-bin");
+          progressData.chartRows[binId] = {};
+          binChart.querySelectorAll(".chartRow").forEach(chartRow => {
+            const temper = chartRow.getAttribute("data-temper");
+            const fillEl = chartRow.querySelector(".fill");
+            progressData.chartRows[binId][temper] = fillEl ? fillEl.style.width : "";
+          });
+        });
+
+        // Save grid offset values (for the footer hex offsets)
+        progressData.gridOffset = {
+          x: gridOffset.x,
+          y: gridOffset.y
+        };
+
+        // Determine the current file's name; for example, from a query parameter:
+        const urlParams = new URLSearchParams(window.location.search);
+        const filename = urlParams.get("filename") || "default";
+
+        // Save the progress data as a JSON string under a key specific to this file.
+        localStorage.setItem("progress_" + filename, JSON.stringify(progressData));
+      }
+
+      // Call this function on page load to restore any saved progress
+      function loadProgress() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const filename = urlParams.get("filename") || "default";
+        const stored = localStorage.getItem("progress_" + filename);
+        if (stored) {
+          const progressData = JSON.parse(stored);
+
+          // Restore the total progress text
+          const totalProgressEl = document.getElementById("totalProgressText");
+          if (totalProgressEl && progressData.totalProgressText) {
+            totalProgressEl.textContent = progressData.totalProgressText;
+          }
+
+          // Restore the progress blocker position
+          const blockerEl = document.getElementById("progressBlocker");
+          if (blockerEl && progressData.progressBlockerTransform) {
+            blockerEl.style.transform = progressData.progressBlockerTransform;
+          }
+
+          // Restore bin progress values
+          for (let binId in progressData.bins) {
+            const binData = progressData.bins[binId];
+            const binProgress = document.querySelector(`.binProgress[data-bin="${binId}"]`);
+            if (binProgress) {
+              const fillEl = binProgress.querySelector(".binProgressFill");
+              const textEl = binProgress.querySelector(".binProgressText.front");
+              if (fillEl && binData.fillWidth) fillEl.style.width = binData.fillWidth;
+              if (textEl && binData.progressText) textEl.textContent = binData.progressText;
+            }
+          }
+
+          // Restore chart rows fill widths
+          for (let binId in progressData.chartRows) {
+            const chartRowsData = progressData.chartRows[binId];
+            const binChart = document.querySelector(`.binChart[data-bin="${binId}"]`);
+            if (binChart) {
+              binChart.querySelectorAll(".chartRow").forEach(chartRow => {
+                const temper = chartRow.getAttribute("data-temper");
+                const fillEl = chartRow.querySelector(".fill");
+                if (fillEl && chartRowsData[temper] !== undefined) {
+                  fillEl.style.width = chartRowsData[temper];
+                }
+              });
+            }
+          }
+
+          // Restore gridOffset values
+          if (progressData.gridOffset) {
+            gridOffset.x = progressData.gridOffset.x;
+            gridOffset.y = progressData.gridOffset.y;
+          }
+          
+        }
+      }
+
+      // Bind these functions so that progress is loaded on page load and saved before unloading
+      window.addEventListener("load", loadProgress);
+      window.addEventListener("beforeunload", saveProgress);
+
+    </script>
 
 </body>
 </html>
