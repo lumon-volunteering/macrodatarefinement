@@ -1,81 +1,3 @@
-    #controlButton {
-    position: fixed;
-    width: 40px;
-    height: 40px;
-    scale: 1.5;
-    background: black;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    transform: rotate(-60deg); /* Default: rotated 60° anticlockwise */
-    transition: transform 0.3s ease;
-    z-index: 10000;
-    }
-
-    #controlButton::before {
-    content: "";
-    position: absolute;
-    top: 0%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 6px;
-    background: white;
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-    }
-
-    /* Smaller inner circle (dark grey) */
-    #controlButton .innerStar {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 90%;
-    height: 90%;
-    transform: translate(-50%, -50%) rotate(20deg);
-    }
-
-    #controlButton.rotated {
-    transform: rotate(60deg);
-    }
-
-    @keyframes closeAnimation {
-    0% {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1, 0.01);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(0.01, 0.01);
-        opacity: 0;
-    }
-    }
-
-    @keyframes openAnimation {
-    0% {
-        transform: scale(0.01, 0.01);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1, 0.01);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-    }
-
-    #appContainer.closeAnim {
-    animation: closeAnimation 0.6s forwards;
-    }
-    #appContainer.openAnim {
-    animation: openAnimation 0.6s forwards;
-    }    
-
     #fullScreenOverlay {
       position: fixed;
       top: 0;
@@ -114,6 +36,8 @@
     position: absolute;
     width: calc(min(90vw, 1.5 * 85vh));
     height: calc(min(90vh, 90vw / 1.5));
+    max-width: 65vw;
+    right: 20vw;
     background: radial-gradient(ellipse farthest-corner, rgba(0,28,46,0) 50%, #181818 100%);
     z-index: 2;
     border-radius: 100px;
@@ -131,9 +55,11 @@
       /* Similarly, the height will be the smaller of:
         - 100vh, or
         - 100vw divided by 1.5 */
+      max-width: 65vw;
       height: calc(min(90vh, 90vw / 1.5));
       background: #001c2e;
       position: relative;
+      left: -15vw;
       /* Optionally add a border or other styling for debugging */
       border-radius: 100px;
       overflow: hidden;
@@ -432,4 +358,23 @@
       color: #37dfef;
       font-weight: bold;
       filter: drop-shadow(0 0 4px #ffffff);
+    }
+
+    #sticky1 {
+      position: fixed;   /* or absolute, if you prefer relative to a parent */
+      top: 7%;
+      left: 69%;
+      z-index: 100001;   /* high enough to be on top of everything */
+      pointer-events: none;  /* so it doesn't block interactions */
+      width: 300px;      /* adjust size as needed */
+    }
+  
+    #sticky2 {
+      position: fixed;   /* or absolute, if you prefer relative to a parent */
+      top: 28%;
+      left: 81%;
+      transform: rotate(-5deg);
+      z-index: 100000;   /* high enough to be on top of everything */
+      pointer-events: none;  /* so it doesn't block interactions */
+      width: 300px;      /* adjust size as needed */
     }
