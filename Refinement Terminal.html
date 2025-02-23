@@ -373,7 +373,7 @@
 
       // Update overall progress display.
       function updateOverallProgress() {
-        let difficultyFactor = 2
+        let difficultyFactor = 2000;
         const percentage = (totalProgressPoints / difficultyFactor) * 100;
         totalProgressText.textContent = Math.floor(percentage) + "% Complete";
         progressBlocker.style.transform = `translateX(${percentage}%)`;
@@ -1292,119 +1292,6 @@
         requestAnimationFrame(animateGlobe);
       }
       animateGlobe();
-
-    </script>
-
-    <script>
-      // Call this function to save progress
-      function saveProgress() {
-        const progressData = {};
-
-        // Save the overall progress text
-        const totalProgressEl = document.getElementById("totalProgressText");
-        progressData.totalProgressText = totalProgressEl ? totalProgressEl.textContent : "";
-
-        // Save the current transform value of the progress blocker
-        const blockerEl = document.getElementById("progressBlocker");
-        progressData.progressBlockerTransform = blockerEl ? blockerEl.style.transform : "";
-
-        // Save progress for each bin (progress fill width and progress text)
-        progressData.bins = {};
-        document.querySelectorAll(".binProgress").forEach(binProgress => {
-          const binId = binProgress.getAttribute("data-bin");
-          const fillEl = binProgress.querySelector(".binProgressFill");
-          const textEl = binProgress.querySelector(".binProgressText.front");
-          progressData.bins[binId] = {
-            fillWidth: fillEl ? fillEl.style.width : "",
-            progressText: textEl ? textEl.textContent : ""
-          };
-        });
-
-        // Save the chart rows fill widths for each bin/chartRow
-        progressData.chartRows = {};
-        document.querySelectorAll(".binChart").forEach(binChart => {
-          const binId = binChart.getAttribute("data-bin");
-          progressData.chartRows[binId] = {};
-          binChart.querySelectorAll(".chartRow").forEach(chartRow => {
-            const temper = chartRow.getAttribute("data-temper");
-            const fillEl = chartRow.querySelector(".fill");
-            progressData.chartRows[binId][temper] = fillEl ? fillEl.style.width : "";
-          });
-        });
-
-        // Save grid offset values (for the footer hex offsets)
-        progressData.gridOffset = {
-          x: gridOffset.x,
-          y: gridOffset.y
-        };
-
-        // Determine the current file's name; for example, from a query parameter:
-        const urlParams = new URLSearchParams(window.location.search);
-        const filename = urlParams.get("filename") || "default";
-
-        // Save the progress data as a JSON string under a key specific to this file.
-        localStorage.setItem("progress_" + filename, JSON.stringify(progressData));
-      }
-
-      // Call this function on page load to restore any saved progress
-      function loadProgress() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const filename = urlParams.get("filename") || "default";
-        const stored = localStorage.getItem("progress_" + filename);
-        if (stored) {
-          const progressData = JSON.parse(stored);
-
-          // Restore the total progress text
-          const totalProgressEl = document.getElementById("totalProgressText");
-          if (totalProgressEl && progressData.totalProgressText) {
-            totalProgressEl.textContent = progressData.totalProgressText;
-          }
-
-          // Restore the progress blocker position
-          const blockerEl = document.getElementById("progressBlocker");
-          if (blockerEl && progressData.progressBlockerTransform) {
-            blockerEl.style.transform = progressData.progressBlockerTransform;
-          }
-
-          // Restore bin progress values
-          for (let binId in progressData.bins) {
-            const binData = progressData.bins[binId];
-            const binProgress = document.querySelector(`.binProgress[data-bin="${binId}"]`);
-            if (binProgress) {
-              const fillEl = binProgress.querySelector(".binProgressFill");
-              const textEl = binProgress.querySelector(".binProgressText.front");
-              if (fillEl && binData.fillWidth) fillEl.style.width = binData.fillWidth;
-              if (textEl && binData.progressText) textEl.textContent = binData.progressText;
-            }
-          }
-
-          // Restore chart rows fill widths
-          for (let binId in progressData.chartRows) {
-            const chartRowsData = progressData.chartRows[binId];
-            const binChart = document.querySelector(`.binChart[data-bin="${binId}"]`);
-            if (binChart) {
-              binChart.querySelectorAll(".chartRow").forEach(chartRow => {
-                const temper = chartRow.getAttribute("data-temper");
-                const fillEl = chartRow.querySelector(".fill");
-                if (fillEl && chartRowsData[temper] !== undefined) {
-                  fillEl.style.width = chartRowsData[temper];
-                }
-              });
-            }
-          }
-
-          // Restore gridOffset values
-          if (progressData.gridOffset) {
-            gridOffset.x = progressData.gridOffset.x;
-            gridOffset.y = progressData.gridOffset.y;
-          }
-          
-        }
-      }
-
-      // Bind these functions so that progress is loaded on page load and saved before unloading
-      window.addEventListener("load", loadProgress);
-      window.addEventListener("beforeunload", saveProgress);
 
     </script>
 
