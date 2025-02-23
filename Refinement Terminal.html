@@ -617,7 +617,7 @@
           punishActive = false;
           punishCells = null;
           activeSourceGroup = null;
-          setTimeout(safeInitSourceGroup, 5000 + Math.random() * 15000);
+          setTimeout(initSourceGroup, Math.random() * 10000);
         }, settings.punishDuration + 1000);
       }
   
@@ -975,7 +975,7 @@
               binsEls.forEach(bin => bin.classList.remove("open"));
               binAnimationActive = false;
               inputLocked = false;
-              setTimeout(safeInitSourceGroup, 5000 + Math.random() * 6000);
+              setTimeout(initSourceGroup, Math.random() * 10000);
             });
           }
         }
@@ -1081,7 +1081,7 @@
             if (Date.now() - activeSourceGroup.notVisibleStart > 5000) {
               console.log("Source group not visible for >5 seconds, resetting.");
               activeSourceGroup = null;
-              safeInitSourceGroup();
+              initSourceGroup();
             }
           } else {
             activeSourceGroup.notVisibleStart = null;
