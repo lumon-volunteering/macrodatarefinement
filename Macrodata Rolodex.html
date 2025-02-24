@@ -22,6 +22,7 @@
   <div id="pageWrapper">
     <img id="sticky1" src="sticky1.png" alt="sticky1">
     <img id="sticky2" src="sticky2.png" alt="sticky2">
+    <img id="screenOverlay" src="overlay.png" alt="screenOverlay">
       <div id="appContainer" class="crt">
 
         <div id="bouncingGlobeOverlay">
@@ -142,12 +143,7 @@
     </div>
   </div>
 
-  <!-- Full-screen overlay SVG -->
-  <svg id="fullScreenOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" 
-    xmlns="http://www.w3.org/2000/svg" 
-    style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
-    <path fill="#011631" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
-  </svg>
+
   
   <script>
     // Animation settings
@@ -475,59 +471,6 @@
       updateLinePositions();
     });
   </script>
-
-    <script>
-      function updateOverlayHole() {
-        const appContainer = document.getElementById('appContainer');
-        const overlaySVG = document.getElementById('fullScreenOverlay');
-        const pathElement = overlaySVG.querySelector('path');
-  
-        // Get the bounding rect of appContainer relative to the viewport
-        const rect = appContainer.getBoundingClientRect();
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-  
-        // Convert appContainer's position and size to percentages (0–100) of the viewport
-        const x = (rect.left / vw) * 100;
-        const y = (rect.top / vh) * 100;
-        const w = (rect.width / vw) * 100;
-        const h = (rect.height / vh) * 100;
-  
-        // Get the computed border-radius in pixels (assume it is set to 100px)
-        const computedRadius = parseFloat(getComputedStyle(appContainer).borderRadius) || 100;
-        // Convert this pixel value into SVG coordinate units:
-        // For horizontal: rx = (computedRadius / vw) * 100
-        // For vertical:   ry = (computedRadius / vh) * 100
-        const rx = (computedRadius / vw) * 100;
-        const ry = (computedRadius / vh) * 100;
-  
-        // Build the inner rounded rectangle path using arc commands
-        const innerRounded = `
-          M ${x + rx}, ${y}
-          H ${x + w - rx}
-          A ${rx},${ry} 0 0 1 ${x + w}, ${y + ry}
-          V ${y + h - ry}
-          A ${rx},${ry} 0 0 1 ${x + w - rx}, ${y + h}
-          H ${x + rx}
-          A ${rx},${ry} 0 0 1 ${x}, ${y + h - ry}
-          V ${y + ry}
-          A ${rx},${ry} 0 0 1 ${x + rx}, ${y}
-          Z`;
-  
-        // Construct the full path:
-        // Outer rectangle covers the whole viewBox (0,0 to 100,100)
-        // then subtract the inner rounded rectangle
-        const d = `M0,0 H100 V100 H0 Z ${innerRounded}`;
-        pathElement.setAttribute('d', d);
-      }
-
-  
-      window.addEventListener('resize', function() {
-      updateOverlayHole();
-      });
-      window.addEventListener('scroll', updateOverlayHole);
-      updateOverlayHole();
-    </script>
   
 
     <script>

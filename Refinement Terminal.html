@@ -10,6 +10,7 @@
   <div id="pageWrapper">
     <img id="sticky1" src="sticky1.png" alt="sticky1">
     <img id="sticky2" src="sticky2.png" alt="sticky2">
+    <img id="screenOverlay" src="overlay.png" alt="screenOverlay">
       <div id="appContainer" class="crt">
 
         <div id="bouncingGlobeOverlay">
@@ -273,21 +274,6 @@
       </div> <!-- end of appContainer -->
       
   </div>
-
-  <!-- Full-screen overlay SVG -->
-  <svg id="fullScreenOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" 
-    xmlns="http://www.w3.org/2000/svg" 
-    style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
-    <path fill="#011631" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
-  </svg>
-
-  <button id="controlButton">
-    <svg class="innerStar" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <polygon 
-          points="50,0 61.48,22.28 85.36,14.64 77.72,38.52 100,50 77.72,61.48 85.36,85.36 61.48,77.72 50,100 38.52,77.72 14.64,85.36 22.28,61.48 0,50 22.28,38.52 14.64,14.64 38.52,22.28" 
-          fill="#141414" stroke="#141414" stroke-width="8" stroke-linejoin="round"/>
-      </svg>
- </button>
 
   <script>
     (function(){
@@ -1136,43 +1122,6 @@
           console.error("Error loading image:", e);
         };
       });
-  
-      // Update the full-screen overlay’s hole based on appContainer's position.
-      function updateOverlayHole() {
-        const appContainer = document.getElementById('appContainer');
-        const overlaySVG = document.getElementById('fullScreenOverlay');
-        if (!appContainer || !overlaySVG) return;
-        const pathElement = overlaySVG.querySelector('path');
-        const rect = appContainer.getBoundingClientRect();
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const x = (rect.left / vw) * 100;
-        const y = (rect.top / vh) * 100;
-        const w = (rect.width / vw) * 100;
-        const h = (rect.height / vh) * 100;
-        const computedRadius = parseFloat(getComputedStyle(appContainer).borderRadius) || 100;
-        const rx = (computedRadius / vw) * 100;
-        const ry = (computedRadius / vh) * 100;
-        const innerRounded = `
-          M ${x + rx}, ${y}
-          H ${x + w - rx}
-          A ${rx},${ry} 0 0 1 ${x + w}, ${y + ry}
-          V ${y + h - ry}
-          A ${rx},${ry} 0 0 1 ${x + w - rx}, ${y + h}
-          H ${x + rx}
-          A ${rx},${ry} 0 0 1 ${x}, ${y + h - ry}
-          V ${y + ry}
-          A ${rx},${ry} 0 0 1 ${x + rx}, ${y}
-          Z`;
-        const d = `M0,0 H100 V100 H0 Z ${innerRounded}`;
-        pathElement.setAttribute('d', d);
-      }
-
-      window.addEventListener('resize', function() {
-      updateOverlayHole();
-      });
-      window.addEventListener('scroll', updateOverlayHole);
-      updateOverlayHole();
   
       // Custom Cursor: ensure it follows the mouse.
       window.addEventListener("DOMContentLoaded", function() {

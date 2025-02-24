@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUMON Intro</title>
+    <style>
+            /* Ensure html and body fill the viewport */
+            html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #001C2E;
+            font-family: Gotham, sans-serif;
+            /* The background and CRT filter remain fully opaque */
+            }
+
+            #fullScreenOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;  /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            z-index: 9999; /* Ensure it sits on top of everything */
+            pointer-events: none; /* Allow interactions to pass through */
+            }
+
+
+            /* Ensure the document fills the viewport */
+            html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #001C2E;
+            }
+
+            /* Fullscreen wrapper using Grid to center content */
+            #pageWrapper {
+            display: grid;
+            place-items: center;
+            width: 100vw;
+            height: 100vh;
+            background: #00122b;
+            /* Optionally, add your CRT effect class here if needed:
+                class="crt" */
+            }
+
+            /* The inner container that always maintains a 1.5:1 ratio.
+            It will expand to the maximum size that fits inside the viewport. */
+            #appContainer {
+            position: relative;
+            width: calc(min(90vw, 1.5 * 85vh));
+            height: calc(min(90vh, 90vw / 1.5));
+            max-width: 65vw;
+            left: -15vw;
+            background: #001c2e;
+            border-radius: 100px;
+            overflow: hidden;
+            }
+
+
+            body {
+            cursor: none;
+            }
+
+            #customCursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1;
+            width: 32px;  /* adjust size as needed */
+            height: 32px; /* adjust size as needed */
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 0 6px #fff);
+            }
+
+            /* Wrap all UI elements in a container for fade-out.
+            This container’s fade-out will not affect the background or CRT filter. */
+            #uiContainer {
+            opacity: 1;
+            transition: opacity 0.7s ease-out;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            }
+            
+            /* ===== CRT Effect Filter (without text shadow animation) ===== */
+            @keyframes flicker {
+            0% { opacity: 0.27861; }
+            5% { opacity: 0.34769; }
+            10% { opacity: 0.23604; }
+            15% { opacity: 0.90626; }
+            20% { opacity: 0.18128; }
+            25% { opacity: 0.83891; }
+            30% { opacity: 0.65583; }
+            35% { opacity: 0.67807; }
+            40% { opacity: 0.26559; }
+            45% { opacity: 0.84693; }
+            50% { opacity: 0.96019; }
+            55% { opacity: 0.08594; }
+            60% { opacity: 0.20313; }
+            65% { opacity: 0.71988; }
+            70% { opacity: 0.53455; }
+            75% { opacity: 0.37288; }
+            80% { opacity: 0.71428; }
+            85% { opacity: 0.70419; }
+            90% { opacity: 0.7003; }
+            95% { opacity: 0.36108; }
+            100% { opacity: 0.24387; }
+            }
+            
+            /* The .crt class no longer applies any text shadow animation,
+            but it still establishes relative positioning so that the pseudo-elements overlay the page. */
+            .crt {
+            position: relative;
+            }
+            
+            .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+            }
+            
+            /* Vignette effect added to the CRT filter */
+            .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: radial-gradient(ellipse farthest-corner, rgba(0,28,46,0) 75%, #000b13 100%),
+                        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: cover, 100% 2px, 3px 100%;
+            pointer-events: none;
+            }
+
+    </style>
+</head>
+<body>
+
+    <div id="pageWrapper">
+        <div id="appContainer" class="crt">
+
+            
+
+            <div id="customCursor">
+                <img src="cursor.png" alt="custom cursor">
+            </div>
+        </div>
+    </div>
+    
+     <!-- Full-screen overlay SVG -->
+     <svg id="fullScreenOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" 
+        xmlns="http://www.w3.org/2000/svg" 
+        style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; pointer-events:none;">
+        <path fill="#00122b" fill-rule="evenodd" d="M0,0 H100 V100 H0 Z"/>
+     </svg>
+
+     <script>
+        function updateOverlayHole() {
+          const appContainer = document.getElementById('appContainer');
+          const overlaySVG = document.getElementById('fullScreenOverlay');
+          const pathElement = overlaySVG.querySelector('path');
+    
+          // Get the bounding rect of appContainer relative to the viewport
+          const rect = appContainer.getBoundingClientRect();
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+    
+          // Convert appContainer's position and size to percentages (0–100) of the viewport
+          const x = (rect.left / vw) * 100;
+          const y = (rect.top / vh) * 100;
+          const w = (rect.width / vw) * 100;
+          const h = (rect.height / vh) * 100;
+    
+          // Get the computed border-radius in pixels (assume it is set to 100px)
+          const computedRadius = parseFloat(getComputedStyle(appContainer).borderRadius) || 100;
+          // Convert this pixel value into SVG coordinate units:
+          // For horizontal: rx = (computedRadius / vw) * 100
+          // For vertical:   ry = (computedRadius / vh) * 100
+          const rx = (computedRadius / vw) * 100;
+          const ry = (computedRadius / vh) * 100;
+    
+          // Build the inner rounded rectangle path using arc commands
+          const innerRounded = `
+            M ${x + rx}, ${y}
+            H ${x + w - rx}
+            A ${rx},${ry} 0 0 1 ${x + w}, ${y + ry}
+            V ${y + h - ry}
+            A ${rx},${ry} 0 0 1 ${x + w - rx}, ${y + h}
+            H ${x + rx}
+            A ${rx},${ry} 0 0 1 ${x}, ${y + h - ry}
+            V ${y + ry}
+            A ${rx},${ry} 0 0 1 ${x + rx}, ${y}
+            Z`;
+    
+          // Construct the full path:
+          // Outer rectangle covers the whole viewBox (0,0 to 100,100)
+          // then subtract the inner rounded rectangle
+          const d = `M0,0 H100 V100 H0 Z ${innerRounded}`;
+          pathElement.setAttribute('d', d);
+        }
+    
+        // Update on load and when the viewport changes.
+        window.addEventListener('resize', updateOverlayHole);
+        window.addEventListener('scroll', updateOverlayHole);
+        updateOverlayHole();
+      </script>
+
+    <script>
+        document.addEventListener('mousemove', function(e) {
+        var cursor = document.getElementById('customCursor');
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+        });
+    </script>
+
+</body>
+</html>

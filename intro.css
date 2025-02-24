@@ -229,3 +229,12 @@
                     pointer-events: none;  /* so it doesn't block interactions */
                     width: 300px;      /* adjust size as needed */
                   }
+
+                  #screenOverlay {
+                    opacity: 1;
+                    height: 100vh;;
+                    width: 100vw;
+                    position: fixed;   /* or absolute, if you prefer relative to a parent */
+                    z-index: 99999;   /* high enough to be on top of everything */
+                    pointer-events: none;  /* so it doesn't block interactions */
+                  }
