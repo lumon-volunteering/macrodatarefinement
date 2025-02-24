@@ -567,7 +567,8 @@
       console.log("No saved progress for", currentFileName);
     }
     
-    const progressPercent = Math.floor((totalProgressPoints / 2000) * 100);
+    //CHECKPOINT - make sure progress multiplier matches refinement terminal
+    const progressPercent = Math.floor((totalProgressPoints / 500) * 100);
     const progressElem = document.getElementById("totalProgressPercent");
     if (progressElem) {
       progressElem.textContent = progressPercent + "%";

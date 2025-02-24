@@ -358,7 +358,7 @@
 
       // Update overall progress display.
       function updateOverallProgress() {
-        let difficultyFactor = 2000;
+        let difficultyFactor = 500;
         const percentage = (totalProgressPoints / difficultyFactor) * 100;
         totalProgressText.textContent = Math.floor(percentage) + "% Complete";
         progressBlocker.style.transform = `translateX(${percentage}%)`;
@@ -509,8 +509,8 @@
       // Update the bin progress bar and text.
       function updateBinProgress(binId) {
         const sum = binsData[binId].WO + binsData[binId].FC + binsData[binId].DR + binsData[binId].MA;
-        // Bin percentage, change 400 to lower number for faster bin progress for testing purposes
-        const percentage = (sum / 400) * 100;
+        // CHECKPOINT Bin percentage, change 400 DEFAULT to lower number for faster bin progress for testing purposes
+        const percentage = (sum / 100) * 100;
         const progressContainer = document.querySelector(`.binProgress[data-bin="${binId}"]`);
         const fillEl = progressContainer.querySelector(".binProgressFill");
         fillEl.style.width = percentage + "%";

@@ -22,8 +22,6 @@ html, body {
     background: #000000;
   }
 
-  /* The inner container that always maintains a 1.5:1 ratio.
-    It will expand to the maximum size that fits inside the viewport. */
   #appContainer {
     position: relative;
     width: 60%;
@@ -102,6 +100,7 @@ html, body {
     from {opacity: 0; }
     to { opacity: 1; }
   }
+  
   /* Top Progress Area */
   #totalProgressContainer {
     position: absolute;

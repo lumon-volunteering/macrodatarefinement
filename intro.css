@@ -42,15 +42,14 @@
                 /* The inner container that always maintains a 1.5:1 ratio.
                 It will expand to the maximum size that fits inside the viewport. */
                 #appContainer {
-                position: relative;
-                width: calc(min(90vw, 1.5 * 85vh));
-                height: calc(min(90vh, 90vw / 1.5));
-                max-width: 65vw;
-                background: #001c2e;
-                left: -15vw;
-                border-radius: 100px;
-                overflow: hidden;
-                cursor: none;
+                  position: relative;
+                  width: 60%;
+                  height: 84%;
+                  background: #001c2e;
+                  left: -14vw;
+                  border-radius: 100px;
+                  overflow: hidden;
+                  cursor: none;
                 }
     
                 /* Wrap all UI elements in a container for fade-out.
