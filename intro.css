@@ -38,9 +38,7 @@
                 height: 100vh;
                 background: #000000;
                 }
-    
-                /* The inner container that always maintains a 1.5:1 ratio.
-                It will expand to the maximum size that fits inside the viewport. */
+                
                 #appContainer {
                   position: relative;
                   width: 60%;

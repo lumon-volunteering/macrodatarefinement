@@ -491,7 +491,8 @@
             showPopup("NOPE");
           } else {
             temperWinners.forEach(temp => {
-              binsData[binId][temp] = Math.min(100, binsData[binId][temp] + 1);
+              // CHECKPOINT - CHANGE LAST NUMBER TO CHANGE TEMPER FILL
+              binsData[binId][temp] = Math.min(100, binsData[binId][temp] + 4);
             });
           }
           chart.querySelectorAll(".chartRow").forEach(row => {
