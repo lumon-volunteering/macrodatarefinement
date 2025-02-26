@@ -27,21 +27,7 @@
     <img id="screenOverlay" src="overlay.png" alt="screenOverlay">
       <div id="appContainer" class="crt">
 
-        <div id="bouncingGlobeOverlay">
-          <!-- Example globe SVG – replace with your actual globeSvg if needed -->
-          <svg id="globeSvg" width="300" height="150" viewBox="-4 -4 308 158">
-            <g class="glow">
-              <ellipse cx="150" cy="75" rx="150" ry="75" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <line x1="30" y1="30" x2="270" y2="30" stroke="#8ef1fa" stroke-width="4"/>
-              <line x1="30" y1="120" x2="270" y2="120" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-            </g>
-              <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none" filter="none"!important/>
-            </svg>
-        </div>
+        <div id="bouncingGlobeOverlay"></div>
 
         <!-- Hidden white glow filter -->
         <svg width="0" height="0" xmlns="http://www.w3.org/2000/svg" style="position: absolute;">
@@ -484,59 +470,74 @@
     </script>
 
 
-      <script> 
-        // Inactivity timer variables
-        const overlay = document.getElementById('bouncingGlobeOverlay');
-        const inactivityDuration = 30000; // 30 seconds
-        let inactivityTimer;
+    <script>
+      // Inactivity timer variables
+      const overlay = document.getElementById('bouncingGlobeOverlay');
+      const inactivityDuration = 30000; //30 seconds
+      let inactivityTimer;
 
-        // Reset (or start) the inactivity timer; also ensure overlay is hidden on input.
-        function resetInactivityTimer() {
-          // Immediately hide the overlay if it’s visible.
-          overlay.style.opacity = 0;
-          clearTimeout(inactivityTimer);
-          inactivityTimer = setTimeout(() => {
-            overlay.style.opacity = 1;  // fade in after 30 seconds of no input
-            globe.style.opacity = 1;
-          }, inactivityDuration);
+      // Reset (or start) the inactivity timer; also ensure overlay is hidden on input.
+      function resetInactivityTimer() {
+        // Immediately hide the overlay if it’s visible.
+        overlay.style.opacity = 0;
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          overlay.style.opacity = 1;  // fade in after inactivity
+          lumonGlobe.style.opacity = 1;
+        }, inactivityDuration);
+      }
+
+      // Listen for any user input (mousemove, keydown, mousedown, touchstart)
+      ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer, { passive: true });
+      });
+      resetInactivityTimer();  // start the timer on page load
+
+      // Create and load the lumonGlobe image from the same directory.
+      const lumonGlobe = new Image();
+      lumonGlobe.src = "lumonGlobe.png";  // Ensure this file is in the same directory
+      lumonGlobe.alt = "Lumon Globe";
+      lumonGlobe.id = "lumonGlobe";
+      lumonGlobe.style.position = "absolute";
+      lumonGlobe.style.width = "300px";  // adjust size as needed
+      lumonGlobe.style.height = "auto";
+      lumonGlobe.style.filter = "drop-shadow(0 0 6px #fff)";
+      
+      // Append the image to the overlay so it can be animated.
+      overlay.appendChild(lumonGlobe);
+
+      // Bounce animation variables
+      let posX = 0, posY = 0;
+      let velocityX = 2, velocityY = 2;
+
+      function animateGlobe() {
+        const overlayRect = overlay.getBoundingClientRect();
+        const globeRect = lumonGlobe.getBoundingClientRect();
+
+        // Update position
+        posX += velocityX;
+        posY += velocityY;
+
+        // Bounce off horizontal boundaries
+        if (posX + globeRect.width > overlayRect.width || posX < 0) {
+          velocityX = -velocityX;
+          posX = Math.max(0, Math.min(posX, overlayRect.width - globeRect.width));
+        }
+        // Bounce off vertical boundaries
+        if (posY + globeRect.height > overlayRect.height || posY < 0) {
+          velocityY = -velocityY;
+          posY = Math.max(0, Math.min(posY, overlayRect.height - globeRect.height));
         }
 
-        // Listen for any user input (mousemove, keydown, mousedown, touchstart)
-        ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => {
-          document.addEventListener(evt, resetInactivityTimer, {passive: true});
-        });
-        resetInactivityTimer();  // start the timer on page load
+        // Apply the translation to the lumonGlobe image.
+        lumonGlobe.style.transform = `translate(${posX}px, ${posY}px)`;
 
-        // Bounce animation for the globe SVG (DVD logo style)
-        const globe = document.getElementById('globeSvg');
-        let posX = 0, posY = 0;
-        let velocityX = 2, velocityY = 2;
+        requestAnimationFrame(animateGlobe);
+      }
 
-        function animateGlobe() {
-          const overlayRect = overlay.getBoundingClientRect();
-          const globeRect = globe.getBoundingClientRect();
-
-          // update position
-          posX += velocityX;
-          posY += velocityY;
-
-          // Bounce off the horizontal boundaries
-          if (posX + globeRect.width > overlayRect.width || posX < 0) {
-            velocityX = -velocityX;
-            posX = Math.max(0, Math.min(posX, overlayRect.width - globeRect.width));
-          }
-          // Bounce off the vertical boundaries
-          if (posY + globeRect.height > overlayRect.height || posY < 0) {
-            velocityY = -velocityY;
-            posY = Math.max(0, Math.min(posY, overlayRect.height - globeRect.height));
-          }
-
-          globe.style.transform = `translate(${posX}px, ${posY}px)`;
-          requestAnimationFrame(animateGlobe);
-        }
-        animateGlobe();
-
-      </script>
+      // Start the animation once the image has loaded.
+      lumonGlobe.onload = animateGlobe;
+    </script>
 
       <script>
         // Assuming updateTotalProgressPercentForCurrentFile is defined as before.
@@ -569,7 +570,6 @@
             console.log("No saved progress for", currentFileName);
           }
           
-          //CHECKPOINT - make sure progress multiplier matches refinement terminal
           const progressPercent = overallProgress;
           const progressElem = document.getElementById("totalProgressPercent");
           if (progressElem) {

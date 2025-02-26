@@ -738,14 +738,6 @@
     filter: drop-shadow(0 0 4px #37dfef);
   }
 
-  #processedImgClone {
-    position: absolute;
-    left: 0;
-    top: 0;
-    opacity: 0;
-    transition: opacity 1s ease 2s;
-  }
-
   #sticky1 {
     position: fixed;   /* or absolute, if you prefer relative to a parent */
     top: 7%;
