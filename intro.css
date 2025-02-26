@@ -209,23 +209,42 @@
                 }
 
                 #sticky1 {
-                    position: fixed;   /* or absolute, if you prefer relative to a parent */
-                    top: 7%;
-                    left: 69%;
-                    z-index: 100001;   /* high enough to be on top of everything */
-                    pointer-events: none;  /* so it doesn't block interactions */
-                    width: 300px;      /* adjust size as needed */
-                  }
-                
-                  #sticky2 {
-                    position: fixed;   /* or absolute, if you prefer relative to a parent */
-                    top: 28%;
-                    left: 81%;
-                    transform: rotate(-5deg);
-                    z-index: 100000;   /* high enough to be on top of everything */
-                    pointer-events: none;  /* so it doesn't block interactions */
-                    width: 300px;      /* adjust size as needed */
-                  }
+                  position: fixed;   /* or absolute, if you prefer relative to a parent */
+                  top: 7%;
+                  left: 68%;
+                  z-index: 100002;   /* high enough to be on top of everything */
+                  pointer-events: none;  /* so it doesn't block interactions */
+                  width: 300px;      /* adjust size as needed */
+                }
+              
+                #sticky2 {
+                  position: fixed;   /* or absolute, if you prefer relative to a parent */
+                  top: 9%;
+                  left: 83%;
+                  transform: rotate(-6deg);
+                  z-index: 100001;   /* high enough to be on top of everything */
+                  pointer-events: none;  /* so it doesn't block interactions */
+                  width: 300px;      /* adjust size as needed */
+                }
+              
+                #sticky3 {
+                  position: fixed;   /* or absolute, if you prefer relative to a parent */
+                  top: 38%;
+                  left: 70%;
+                  z-index: 100000;   /* high enough to be on top of everything */
+                  pointer-events: none;  /* so it doesn't block interactions */
+                  width: 300px;      /* adjust size as needed */
+                }
+              
+                #sticky4 {
+                  position: fixed;   /* or absolute, if you prefer relative to a parent */
+                  top: 63%;
+                  left: 80%;
+                  transform: rotate(5deg);
+                  z-index: 100000;   /* high enough to be on top of everything */
+                  pointer-events: none;  /* so it doesn't block interactions */
+                  width: 300px;      /* adjust size as needed */
+                }
 
                   #screenOverlay {
                     opacity: 1;
