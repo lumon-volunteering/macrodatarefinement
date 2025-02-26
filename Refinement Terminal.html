@@ -10,24 +10,12 @@
   <div id="pageWrapper">
     <img id="sticky1" src="sticky1.png" alt="sticky1">
     <img id="sticky2" src="sticky2.png" alt="sticky2">
+    <img id="sticky3" src="sticky3.png" alt="sticky3">
+    <img id="sticky4" src="sticky4.png" alt="sticky4">
     <img id="screenOverlay" src="overlay.png" alt="screenOverlay">
       <div id="appContainer" class="crt">
 
-        <div id="bouncingGlobeOverlay">
-          <!-- Example globe SVG – replace with your actual globeSvg if needed -->
-          <svg id="globeSvg" width="300" height="150" viewBox="-4 -4 308 158">
-            <g class="glow">
-              <ellipse cx="150" cy="75" rx="150" ry="75" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <line x1="30" y1="30" x2="270" y2="30" stroke="#8ef1fa" stroke-width="4"/>
-              <line x1="30" y1="120" x2="270" y2="120" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 60,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 100,75 0 0 1 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 100,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-              <path d="M 150,0 A 60,75 0 0 0 150,150" fill="none" stroke="#8ef1fa" stroke-width="4"/>
-            </g>
-              <rect x="40" y="45" width="220" height="60" fill="#001C2E" stroke="none" filter="none"!important/>
-            </svg>
-        </div>
+        <div id="bouncingGlobeOverlay"></div>
 
         <div id="mainContainer">
           <!-- Wrap all UI elements (except background and CRT filter) in uiContainer for fade-in -->
@@ -255,9 +243,12 @@
             <svg id="connectorContainer" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 7;"></svg>
             
             <!-- Popup Elements -->
-            <div id="popup">NOPE</div>
-            <div id="popupContaminated">PLEASE DO NOT BIN HEALTHY DATA</div>
+            <div id="popup">NO BAD DATA FOUND</div>
+            <div id="popupContaminated">DO NOT BIN HEALTHY DATA</div>
             <div id="popupWrongBin">WRONG BIN</div>
+            <!-- 100% Completion Popup -->
+            <div id="popup100">100%</div>
+
             
             <!-- Footer Container -->
             <div id="footerContainer">
@@ -313,7 +304,7 @@
       let activeSourceGroup = null;
       let punishActive = false;
       let punishStartTime = 0;
-      let totalProgressPoints = 0;
+      let overallProgress = 0;
       let binsData = {
         "01": { WO: 0, FC: 0, DR: 0, MA: 0 },
         "02": { WO: 0, FC: 0, DR: 0, MA: 0 },
@@ -350,19 +341,195 @@
       // Update the footer every 100ms
       setInterval(updateFooterWithHexOffsets, 100);
 
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // 
       //
-      //               CHECKPOINT - PROGRESS PERCENT
-      //               (adjust difficultyFactor to smaller number for faster file completion) (2000 default)
+      //               CHECKPOINT - PROGRESSION BLOCK
+      //               (adjust progressIncrement to bigger number for faster file progression)
       //
+
+
+      // Animate the temper chart rising for the given bin.
+      // Declare this variable at the start of your script.
+      const progressIncrement = 15;
+
+      // helper function to determine which bins are full
+      function isBinFull(binId) {
+        const binData = binsData[binId];
+        const sum = binData.WO + binData.FC + binData.DR + binData.MA;
+        return sum >= 400;
+      }
+
+
+      function initSourceGroup() {
+      // Determine the visible area of the grid.
+      const visIStart = Math.floor(gridOffset.x / settings.baseCellSize);
+      const visIEnd = Math.floor((gridOffset.x + canvas.width) / settings.baseCellSize);
+      const visJStart = Math.floor(gridOffset.y / settings.baseCellSize);
+      const visJEnd = Math.floor((gridOffset.y + canvas.height) / settings.baseCellSize);
+
+      // Randomly select a starting cell within the visible area.
+      const i0 = visIStart + Math.floor(Math.random() * (visIEnd - visIStart + 1));
+      const j0 = visJStart + Math.floor(Math.random() * (visJEnd - visJStart + 1));
+      const key = i0 + "," + j0;
+      const sourceData = repopulatedCells[key] || getCellData(i0, j0);
+
+      // Build a list of available frequencies (i.e. bins 01 through 05) that aren't full.
+      let availableFrequencies = [];
+      for (let i = 1; i <= 5; i++) {
+        const binId = i < 10 ? "0" + i : i.toString();
+        if (!isBinFull(binId)) {
+          availableFrequencies.push(i);
+        }
+      }
+      
+      // If all bins are full, do not spawn a new source group.
+      if (availableFrequencies.length === 0) {
+        console.log("All bins are full. Skipping source group spawn.");
+        return;
+      }
+      
+      // Randomly pick a frequency from the available ones.
+      const frequency = availableFrequencies[Math.floor(Math.random() * availableFrequencies.length)];
+
+      // Generate candidate partner cells within a 5-cell radius.
+      let candidates = [];
+      for (let di = -5; di <= 5; di++) {
+        for (let dj = -5; dj <= 5; dj++) {
+          if (di === 0 && dj === 0) continue;
+          const dist = Math.sqrt(di * di + dj * dj);
+          candidates.push({ key: (i0 + di) + "," + (j0 + dj), dist });
+        }
+      }
+      // Sort candidates by distance.
+      candidates.sort((a, b) => a.dist - b.dist);
+      // Pick a random number of partner cells (between 5 and 9).
+      const partnerCount = Math.floor(Math.random() * 5) + 5;
+      const partners = candidates.slice(0, partnerCount).map(p => p.key);
+
+      // Initialize the active source group with the chosen frequency.
+      activeSourceGroup = {
+        sourceKey: key,
+        source_i: i0,
+        source_j: j0,
+        sourceData: sourceData,
+        partners: partners,
+        frequency: frequency,
+        startTime: performance.now()
+      };
+        console.log("Active source group initialized:", activeSourceGroup);
+      }
+  
+      function safeInitSourceGroup() {
+        const elapsed = performance.now() - pageLoadStart;
+        if (elapsed < 7000) {
+          setTimeout(safeInitSourceGroup, 7000 - elapsed);
+          return;
+        }
+        initSourceGroup();
+      }
+
+      // Determine winning temper(s) based on captured cell digits.
+      function determineWinningTemper(cells) {
+        const freq = {};
+        cells.forEach(cell => {
+          const d = cell.digit;
+          freq[d] = (freq[d] || 0) + 1;
+        });
+        const maxFreq = Math.max(...Object.values(freq));
+        let winners = Object.keys(freq).filter(d => freq[d] === maxFreq).map(Number);
+        const allowedWinners = winners.filter(d => d !== 1 && d !== 6);
+        if (allowedWinners.length > 0) winners = allowedWinners;
+        else {
+          const nextFreq = Math.max(...Object.values(freq).filter(f => f < maxFreq));
+          winners = Object.keys(freq).filter(d => d != 1 && d != 6 && freq[d] === nextFreq).map(Number);
+        }
+        const temperWinners = winners.map(d => {
+          if (d === 0 || d === 9) return "WO";
+          if (d === 2 || d === 8) return "FC";
+          if (d === 3 || d === 7) return "DR";
+          if (d === 4 || d === 5) return "MA";
+        });
+        return Array.from(new Set(temperWinners));
+      }
+
+      // Update the temper charts
+      function animateTempersChart(binId, callback) {
+        const chart = document.querySelector(`.binChart[data-bin="${binId}"]`);
+        chart.style.height = "240px";
+        // Force reflow.
+        void chart.offsetHeight;
+        
+        setTimeout(() => {
+          const temperWinners = determineWinningTemper(capturedGroup.cells);
+          if (temperWinners.length === 0) {
+            showPopup("NOPE");
+          } else {
+            temperWinners.forEach(temp => {
+              // Use progressIncrement variable to update each temper bar, capping each at 100.
+              binsData[binId][temp] = Math.min(100, binsData[binId][temp] + progressIncrement);
+            });
+          }
+          chart.querySelectorAll(".chartRow").forEach(row => {
+            const temper = row.getAttribute("data-temper");
+            const value = binsData[binId][temper] || 0;
+            row.querySelector(".fill").style.width = value + "%";
+          });
+        }, 750);
+        
+        setTimeout(() => {
+          chart.style.height = "0";
+          setTimeout(callback, 1000);
+        }, 2250);
+      }
+
+  
+      // Update the bin progress bar and text.
+      function updateBinProgress(binId) {
+      // Calculate the average of the four temper values.
+      const average = (binsData[binId].WO + binsData[binId].FC + binsData[binId].DR + binsData[binId].MA) / 4;
+      // Cap the percentage at 100.
+      const percentage = Math.min(100, average);
+      
+      const progressContainer = document.querySelector(`.binProgress[data-bin="${binId}"]`);
+      const fillEl = progressContainer.querySelector(".binProgressFill");
+      fillEl.style.width = percentage + "%";
+      
+      const backText = progressContainer.querySelector(".binProgressText.back");
+      const frontText = progressContainer.querySelector(".binProgressText.front");
+      const textContent = Math.floor(percentage) + "%";
+      backText.textContent = textContent;
+      frontText.textContent = textContent;
+      frontText.style.clipPath = `inset(0 calc(100% - ${percentage}%) 0 0)`;
+      frontText.style.webkitClipPath = `inset(0 calc(100% - ${percentage}%) 0 0)`;
+    }
+
 
       // Update overall progress display.
       function updateOverallProgress() {
-        let difficultyFactor = 500;
-        const percentage = (totalProgressPoints / difficultyFactor) * 100;
-        totalProgressText.textContent = Math.floor(percentage) + "% Complete";
-        progressBlocker.style.transform = `translateX(${percentage}%)`;
+        let totalProgress = 0;
+        const binCount = 5;
+        for (let i = 1; i <= binCount; i++) {
+          const binId = i < 10 ? "0" + i : i.toString();
+          const binAverage = (binsData[binId].WO + binsData[binId].FC + binsData[binId].DR + binsData[binId].MA) / 4;
+          totalProgress += Math.min(100, binAverage);
+        }
+        overallProgress = totalProgress / binCount; // Update the global variable
+        totalProgressText.textContent = Math.floor(overallProgress) + "% Complete";
+        progressBlocker.style.transform = `translateX(${overallProgress}%)`;
+
+        // If overall progress reaches or exceeds 100%, show the new popup
+        if (Math.floor(overallProgress) >= 100) {
+          const popup100 = document.getElementById("popup100");
+          if (popup100 && popup100.style.display !== "block") {
+            popup100.style.display = "block";
+          }};
       }
+
+
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
       // Resize the canvas to match its container.
       function resizeCanvas() {
@@ -444,30 +611,7 @@
         depositAnimating = true;
         depositStartTime = Date.now();
       }
-  
-      // Determine winning temper(s) based on captured cell digits.
-      function determineWinningTemper(cells) {
-        const freq = {};
-        cells.forEach(cell => {
-          const d = cell.digit;
-          freq[d] = (freq[d] || 0) + 1;
-        });
-        const maxFreq = Math.max(...Object.values(freq));
-        let winners = Object.keys(freq).filter(d => freq[d] === maxFreq).map(Number);
-        const allowedWinners = winners.filter(d => d !== 1 && d !== 6);
-        if (allowedWinners.length > 0) winners = allowedWinners;
-        else {
-          const nextFreq = Math.max(...Object.values(freq).filter(f => f < maxFreq));
-          winners = Object.keys(freq).filter(d => d != 1 && d != 6 && freq[d] === nextFreq).map(Number);
-        }
-        const temperWinners = winners.map(d => {
-          if (d === 0 || d === 9) return "WO";
-          if (d === 2 || d === 8) return "FC";
-          if (d === 3 || d === 7) return "DR";
-          if (d === 4 || d === 5) return "MA";
-        });
-        return Array.from(new Set(temperWinners));
-      }
+
   
       // Display a popup message.
       function showPopup(message, popupId = "popup") {
@@ -479,96 +623,10 @@
         }
       }
   
-      // Animate the temper chart rising for the given bin.
-      function animateTempersChart(binId, callback) {
-        const chart = document.querySelector(`.binChart[data-bin="${binId}"]`);
-        chart.style.height = "240px";
-        // Force reflow.
-        void chart.offsetHeight;
-        setTimeout(() => {
-          const temperWinners = determineWinningTemper(capturedGroup.cells);
-          if (temperWinners.length === 0) {
-            showPopup("NOPE");
-          } else {
-            temperWinners.forEach(temp => {
-              // CHECKPOINT - CHANGE LAST NUMBER TO CHANGE TEMPER FILL
-              binsData[binId][temp] = Math.min(100, binsData[binId][temp] + 4);
-            });
-          }
-          chart.querySelectorAll(".chartRow").forEach(row => {
-            const temper = row.getAttribute("data-temper");
-            const value = binsData[binId][temper] || 0;
-            row.querySelector(".fill").style.width = value + "%";
-          });
-        }, 750);
-        setTimeout(() => {
-          chart.style.height = "0";
-          setTimeout(callback, 1000);
-        }, 2250);
-      }
-  
-      // Update the bin progress bar and text.
-      function updateBinProgress(binId) {
-        const sum = binsData[binId].WO + binsData[binId].FC + binsData[binId].DR + binsData[binId].MA;
-        // CHECKPOINT Bin percentage, change 400 DEFAULT to lower number for faster bin progress for testing purposes
-        const percentage = (sum / 100) * 100;
-        const progressContainer = document.querySelector(`.binProgress[data-bin="${binId}"]`);
-        const fillEl = progressContainer.querySelector(".binProgressFill");
-        fillEl.style.width = percentage + "%";
-        const backText = progressContainer.querySelector(".binProgressText.back");
-        const frontText = progressContainer.querySelector(".binProgressText.front");
-        const textContent = Math.floor(percentage) + "%";
-        backText.textContent = textContent;
-        frontText.textContent = textContent;
-        frontText.style.clipPath = `inset(0 calc(100% - ${percentage}%) 0 0)`;
-        frontText.style.webkitClipPath = `inset(0 calc(100% - ${percentage}%) 0 0)`;
-      }
-  
-      // Initialize a new source group.
-      function initSourceGroup() {
-        const visIStart = Math.floor(gridOffset.x / settings.baseCellSize);
-        const visIEnd = Math.floor((gridOffset.x + canvas.width) / settings.baseCellSize);
-        const visJStart = Math.floor(gridOffset.y / settings.baseCellSize);
-        const visJEnd = Math.floor((gridOffset.y + canvas.height) / settings.baseCellSize);
-        const i0 = visIStart + Math.floor(Math.random() * (visIEnd - visIStart + 1));
-        const j0 = visJStart + Math.floor(Math.random() * (visJEnd - visJStart + 1));
-        const key = i0 + "," + j0;
-        const sourceData = repopulatedCells[key] || getCellData(i0, j0);
-        const frequency = Math.floor(Math.random() * 5) + 1;
-        let candidates = [];
-        for (let di = -5; di <= 5; di++) {
-          for (let dj = -5; dj <= 5; dj++) {
-            if (di === 0 && dj === 0) continue;
-            const dist = Math.sqrt(di * di + dj * dj);
-            candidates.push({ key: (i0 + di) + "," + (j0 + dj), dist });
-          }
-        }
-        candidates.sort((a, b) => a.dist - b.dist);
-        const partners = candidates.slice(0, Math.floor(Math.random() * 5) + 5).map(p => p.key);
-        activeSourceGroup = {
-          sourceKey: key,
-          source_i: i0,
-          source_j: j0,
-          sourceData: getCellData(i0, j0),
-          partners: partners,
-          frequency: frequency,
-          startTime: performance.now()
-        };
-        console.log("Active source group initialized:", activeSourceGroup);
-      }
-  
-      function safeInitSourceGroup() {
-        const elapsed = performance.now() - pageLoadStart;
-        if (elapsed < 7000) {
-          setTimeout(safeInitSourceGroup, 7000 - elapsed);
-          return;
-        }
-        initSourceGroup();
-      }
+
   
       // Punish the source group (with popup and cell reset).
       function punishSourceGroup() {
-        showPopup("NOPE");
         punishActive = true;
         punishStartTime = performance.now();
         let unionCells = capturedGroup ? capturedGroup.cells.slice() : [];
@@ -757,7 +815,7 @@
         const cellSize = settings.baseCellSize * settings.zoomFactor;
   
         if (!depositAnimating && !capturedGroup) {
-          const moveSpeed = 1.5; //adjust for different scroll speed
+          const moveSpeed = 1.25; //adjust for different scroll speed
           if (keysPressed["ArrowUp"] || keysPressed["w"] || keysPressed["W"]) gridOffset.y -= moveSpeed;
           if (keysPressed["ArrowDown"] || keysPressed["s"] || keysPressed["S"]) gridOffset.y += moveSpeed;
           if (keysPressed["ArrowLeft"] || keysPressed["a"] || keysPressed["A"]) gridOffset.x -= moveSpeed;
@@ -765,7 +823,7 @@
         }
 
         if (!depositAnimating && !capturedGroup) {
-          const moveSpeed = 1.5 ; //adjust for different scroll speed
+          const moveSpeed = 1.25 ; //adjust for different scroll speed
           if (keysPressed["ArrowUp"] || keysPressed["w"] || keysPressed["W"]) hexOffset.y -= moveSpeed;
           if (keysPressed["ArrowDown"] || keysPressed["s"] || keysPressed["S"]) hexOffset.y += moveSpeed;
           if (keysPressed["ArrowLeft"] || keysPressed["a"] || keysPressed["A"]) hexOffset.x -= moveSpeed;
@@ -803,15 +861,16 @@
             // --- Source Group Animation Branch (Baseline Logic) ---
             if (activeSourceGroup && activeSourceGroup.startTime !== undefined) {
               const currentTimeEffective = performance.now() - activeSourceGroup.startTime;
-              const amplitude = 0.5;
+              const amplitude = 0.4;
+              const sourceFontScalar = 0.9;
               const cycleTime = currentTimeEffective % settings.totalCycleDuration;
               if (isSourceGroupCell) {
                 const transitionDuration = 200;
                 if (cycleTime < settings.sourcePauseDuration) {
-                  fontSize *= 1 + amplitude * (cycleTime / settings.sourcePauseDuration);
+                  fontSize *= 1 + sourceFontScalar * (cycleTime / settings.sourcePauseDuration);
                 } else if (cycleTime < settings.sourcePauseDuration + transitionDuration) {
                   const t = (cycleTime - settings.sourcePauseDuration) / transitionDuration;
-                  const scaleFactor = (1 + amplitude) * (1 - t) + t;
+                  const scaleFactor = (1 + sourceFontScalar) * (1 - t) + t;
                   fontSize *= scaleFactor;
                 }
                 // After the pause and transition, source group cells remain at normal size.
@@ -820,14 +879,14 @@
                     let maxScale = 1;
                     const freq = activeSourceGroup.frequency;
                     const waveLife = settings.waveBurstDuration;
-                    const threshold = 1.0;
+                    const threshold = 1;
                     // For non-source group cells, consider all cells in the source group.
                     const groupCells = [{ i: activeSourceGroup.source_i, j: activeSourceGroup.source_j }];
                     activeSourceGroup.partners.forEach(key => {
                       const parts = key.split(",").map(Number);
                       groupCells.push({ i: parts[0], j: parts[1] });
                     });
-                    const waveRadius = 4
+                    const waveRadius = 6
                     const dGroup = Math.min(...groupCells.map(cell => Math.sqrt((i - cell.i)**2 + (j - cell.j)**2)));
                     if (dGroup <= waveRadius) {     //
                       const currentCycle = Math.floor(currentTimeEffective / settings.totalCycleDuration);
@@ -954,12 +1013,15 @@
                 });
               }, 1000);
               updateBinProgress(selectedBin);
-              totalProgressPoints = Object.values(binsData).reduce((sum, bin) =>
-                sum + bin.WO + bin.FC + bin.DR + bin.MA, 0);
               updateOverallProgress();
               capturedGroup = null;
-              selectedBin = null;
               binsEls.forEach(bin => bin.classList.remove("open"));
+              binEl.classList.add("closing");
+              // Hold the closing state for 1 second, then remove it:
+              setTimeout(() => {
+                binEl.classList.remove("closing");
+              }, 1000);
+              selectedBin = null;
               binAnimationActive = false;
               inputLocked = false;
               setTimeout(initSourceGroup, Math.random() * 10000);
@@ -1002,57 +1064,81 @@
       }, { passive: false });
   
       window.addEventListener("keydown", (e) => {
-        keysPressed[e.key] = true;
-        if (e.key === "Backspace" && capturedGroup && !inputLocked && !depositAnimating && !clearAnimating) {
-          e.preventDefault();
-          clearAnimating = true;
-          clearStartTime = performance.now();
-          binsEls.forEach(bin => bin.classList.remove("open"));
-        }
-        if (e.key !== "Enter" && capturedGroup) {
-          let key = e.key.length === 1 ? e.key.padStart(2, "0") : e.key;
-          if (["01", "02", "03", "04", "05"].includes(key)) {
-            selectedBin = key;
-            binsEls.forEach(bin => {
-              bin.classList.toggle("open", bin.getAttribute("data-bin") === key);
-            });
-          }
-        } else if (e.key === "Enter" && !depositAnimating) {
-          if (!capturedGroup || capturedGroup.cells.length === 0 || !activeSourceGroup) {
-            showPopup("NOPE");
-            binsEls.forEach(bin => bin.classList.remove("open"));
-            clearAnimating = true;
-            clearStartTime = performance.now();
-            return;
-          }
-          const activeKeys = [activeSourceGroup.source_i + "," + activeSourceGroup.source_j].concat(activeSourceGroup.partners);
-          if (!capturedGroup.cells.some(cell => activeKeys.includes(cell.i + "," + cell.j))) {
-            showPopup("NOPE");
-            binsEls.forEach(bin => bin.classList.remove("open"));
-            clearAnimating = true;
-            clearStartTime = performance.now();
-            return;
-          }
-          const nonSourceCount = capturedGroup.cells.filter(cell => !activeKeys.includes(cell.i + "," + cell.j)).length;
-          if (nonSourceCount > 2) {
-            showPopup("PLEASE DO NOT BIN HEALTHY DATA", "popupContaminated");
-            punishSourceGroup();
-            return;
-          }
-          if (!selectedBin) {
-            punishSourceGroup();
-            return;
-          }
-          if (parseInt(selectedBin, 10) !== activeSourceGroup.frequency) {
-            showPopup("WRONG BIN", "popupWrongBin");
-            punishSourceGroup();
-            return;
-          } else {
-            startDepositAnimation(selectedBin);
-            activeSourceGroup = null;
-          }
-        }
-      });
+  keysPressed[e.key] = true;
+
+  // Helper function to clear the currently selected bin.
+  function clearSelectedBin() {
+    if (selectedBin) {
+      const binEl = document.querySelector(`.bin[data-bin="${selectedBin}"]`);
+      if (binEl) {
+        binEl.classList.remove("open");
+        binEl.classList.add("closing");
+        // Hold the closing state for 1 second, then remove it.
+        setTimeout(() => { 
+          binEl.classList.remove("closing"); 
+        }, 1000);
+      }
+      selectedBin = null;
+    }
+  }
+
+  // BACKSPACE: Cancel current capture/deposit process.
+  if (e.key === "Backspace" && capturedGroup && !inputLocked && !depositAnimating && !clearAnimating) {
+    e.preventDefault();
+    clearAnimating = true;
+    clearStartTime = performance.now();
+    clearSelectedBin();
+  }
+
+  // BIN SELECTION: When a non-Enter key is pressed and there's a captured group.
+  if (e.key !== "Enter" && capturedGroup) {
+    let key = e.key.length === 1 ? e.key.padStart(2, "0") : e.key;
+    if (["01", "02", "03", "04", "05"].includes(key)) {
+      // If a different bin is already selected, clear it first.
+      if (selectedBin && selectedBin !== key) {
+        clearSelectedBin();
+      }
+      selectedBin = key;
+      const binEl = document.querySelector(`.bin[data-bin="${selectedBin}"]`);
+      if (binEl) {
+        binEl.classList.add("open");
+      }
+    }
+  }
+  // ENTER: Process deposit.
+  else if (e.key === "Enter" && !depositAnimating) {
+    const activeKeys = [activeSourceGroup.source_i + "," + activeSourceGroup.source_j].concat(activeSourceGroup.partners);
+    if (!capturedGroup.cells.some(cell => activeKeys.includes(cell.i + "," + cell.j))) {
+      showPopup("DO NOT BIN HEALTHY DATA", "popupContaminated");
+      clearSelectedBin();
+      clearAnimating = true;
+      clearStartTime = performance.now();
+      return;
+    }
+    const nonSourceCount = capturedGroup.cells.filter(cell => !activeKeys.includes(cell.i + "," + cell.j)).length;
+    if (nonSourceCount > 2) {
+      showPopup("DO NOT BIN HEALTHY DATA", "popupContaminated");
+      punishSourceGroup();
+      clearSelectedBin();
+      return;
+    }
+    if (!selectedBin) {
+      punishSourceGroup();
+      clearSelectedBin();
+      return;
+    }
+    if (parseInt(selectedBin, 10) !== activeSourceGroup.frequency) {
+      showPopup("WRONG BIN", "popupWrongBin");
+      punishSourceGroup();
+      clearSelectedBin();
+      return;
+    } else {
+      startDepositAnimation(selectedBin);
+      activeSourceGroup = null;
+    }
+  }
+});
+
       window.addEventListener("keyup", (e) => { keysPressed[e.key] = false; });
   
       /* ==================================================
@@ -1065,8 +1151,8 @@
           const visibleCount = countVisibleSourceGroupCells();
           if (visibleCount === 0) {
             activeSourceGroup.notVisibleStart = activeSourceGroup.notVisibleStart || Date.now();
-            if (Date.now() - activeSourceGroup.notVisibleStart > 5000) {
-              console.log("Source group not visible for >5 seconds, resetting.");
+            if (Date.now() - activeSourceGroup.notVisibleStart > 1000) {
+              console.log("Source group not visible for >1 second, resetting.");
               activeSourceGroup = null;
               initSourceGroup();
             }
@@ -1114,11 +1200,12 @@
           processedImg.style.width = "57%";
           processedImg.style.filter = "drop-shadow(0 0 7px #37dfef)";
           processedImg.style.opacity = 0;
-          processedImg.style.animation = 'fadeIn 3s ease-out forwards';
+          processedImg.style.animation = 'fadeIn 0.5s ease-out forwards';
           processedImg.id = "processedImg";
           const globeContainer = document.getElementById("globeContainer");
           globeContainer.appendChild(processedImg);
-        };
+                  };
+
         img.onerror = function(e) {
           console.error("Error loading image:", e);
         };
@@ -1165,8 +1252,8 @@
             if (savedState) {
               try {
                 const state = JSON.parse(savedState);
-                if (typeof state.totalProgressPoints !== 'undefined') {
-                  totalProgressPoints = state.totalProgressPoints;
+                if (typeof state.overallProgress !== 'undefined') {
+                  overallProgress = state.overallProgress;
                 }
                 if (state.binsData) {
                   binsData = state.binsData;
@@ -1190,7 +1277,7 @@
           function saveProgress() {
             const key = 'progress_' + filename;
             const state = {
-              totalProgressPoints: totalProgressPoints,
+              overallProgress: overallProgress,
               binsData: binsData,
               hexOffset: { x: hexOffset.x, y: hexOffset.y }
             };
@@ -1222,63 +1309,75 @@
 
   </script> 
 
-    <script> 
-      // Inactivity timer variables
-      const overlay = document.getElementById('bouncingGlobeOverlay');
-      const inactivityDuration = 30000; // 30 seconds
-      let inactivityTimer;
+<script>
+  // Inactivity timer variables
+  const overlay = document.getElementById('bouncingGlobeOverlay');
+  const inactivityDuration = 30000; //30 seconds
+  let inactivityTimer;
 
-      // Reset (or start) the inactivity timer; also ensure overlay is hidden on input.
-      function resetInactivityTimer() {
-        // Immediately hide the overlay if it’s visible.
-        overlay.style.opacity = 0;
-        clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(() => {
-          overlay.style.opacity = 1;  // fade in after 30 seconds of no input
-          globe.style.opacity = 1;
-        }, inactivityDuration);
-      }
+  // Reset (or start) the inactivity timer; also ensure overlay is hidden on input.
+  function resetInactivityTimer() {
+    // Immediately hide the overlay if it’s visible.
+    overlay.style.opacity = 0;
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      overlay.style.opacity = 1;  // fade in after inactivity
+      lumonGlobe.style.opacity = 1;
+    }, inactivityDuration);
+  }
 
-      // Listen for any user input (mousemove, keydown, mousedown, touchstart)
-      ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => {
-        document.addEventListener(evt, resetInactivityTimer, {passive: true});
-      });
-      resetInactivityTimer();  // start the timer on page load
+  // Listen for any user input (mousemove, keydown, mousedown, touchstart)
+  ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
+  resetInactivityTimer();  // start the timer on page load
 
-      // Bounce animation for the globe SVG (DVD logo style)
-      const globe = document.getElementById('globeSvg');
-      let posX = 0, posY = 0;
-      let velocityX = 2, velocityY = 2;
+  // Create and load the lumonGlobe image from the same directory.
+  const lumonGlobe = new Image();
+  lumonGlobe.src = "lumonGlobe.png";  // Ensure this file is in the same directory
+  lumonGlobe.alt = "Lumon Globe";
+  lumonGlobe.id = "lumonGlobe";
+  lumonGlobe.style.position = "absolute";
+  lumonGlobe.style.width = "300px";  // adjust size as needed
+  lumonGlobe.style.height = "auto";
+  lumonGlobe.style.filter = "drop-shadow(0 0 6px #fff)";
+  
+  // Append the image to the overlay so it can be animated.
+  overlay.appendChild(lumonGlobe);
 
-      function animateGlobe() {
-        const overlayRect = overlay.getBoundingClientRect();
-        const globeRect = globe.getBoundingClientRect();
+  // Bounce animation variables
+  let posX = 0, posY = 0;
+  let velocityX = 2, velocityY = 2;
 
-        // update position
-        posX += velocityX;
-        posY += velocityY;
+  function animateGlobe() {
+    const overlayRect = overlay.getBoundingClientRect();
+    const globeRect = lumonGlobe.getBoundingClientRect();
 
-        // Bounce off the horizontal boundaries
-        if (posX + globeRect.width > overlayRect.width || posX < 0) {
-          velocityX = -velocityX;
-          posX = Math.max(0, Math.min(posX, overlayRect.width - globeRect.width));
-        }
-        // Bounce off the vertical boundaries
-        if (posY + globeRect.height > overlayRect.height || posY < 0) {
-          velocityY = -velocityY;
-          posY = Math.max(0, Math.min(posY, overlayRect.height - globeRect.height));
-        }
+    // Update position
+    posX += velocityX;
+    posY += velocityY;
 
-        globe.style.transform = `translate(${posX}px, ${posY}px)`;
-        requestAnimationFrame(animateGlobe);
-      }
-      animateGlobe();
+    // Bounce off horizontal boundaries
+    if (posX + globeRect.width > overlayRect.width || posX < 0) {
+      velocityX = -velocityX;
+      posX = Math.max(0, Math.min(posX, overlayRect.width - globeRect.width));
+    }
+    // Bounce off vertical boundaries
+    if (posY + globeRect.height > overlayRect.height || posY < 0) {
+      velocityY = -velocityY;
+      posY = Math.max(0, Math.min(posY, overlayRect.height - globeRect.height));
+    }
 
-    </script>
+    // Apply the translation to the lumonGlobe image.
+    lumonGlobe.style.transform = `translate(${posX}px, ${posY}px)`;
 
-    <script>
-      
-      </script>
+    requestAnimationFrame(animateGlobe);
+  }
+
+  // Start the animation once the image has loaded.
+  lumonGlobe.onload = animateGlobe;
+</script>
+
   
 
 </body>

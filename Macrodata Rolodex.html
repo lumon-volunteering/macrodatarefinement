@@ -536,74 +536,74 @@
 
       </script>
 
-<script>
-  // Assuming updateTotalProgressPercentForCurrentFile is defined as before.
-  function updateTotalProgressPercentForCurrentFile() {
-    const fileElem = document.getElementById("staticTopName");
-    if (!fileElem) {
-      console.error("Element with id 'staticTopName' not found.");
-      return;
-    }
-    const currentFileName = fileElem.textContent.trim();
-    if (!currentFileName) {
-      console.error("No filename found in 'staticTopName'.");
-      return;
-    }
-    
-    const key = 'progress_' + currentFileName;
-    const savedState = localStorage.getItem(key);
-    let totalProgressPoints = 0;
-    if (savedState) {
-      try {
-        const state = JSON.parse(savedState);
-        if (typeof state.totalProgressPoints !== 'undefined') {
-          totalProgressPoints = state.totalProgressPoints;
-        }
-        console.log(currentFileName, "progress loaded:", state);
-      } catch (error) {
-        console.error("Error parsing saved progress for", currentFileName, ":", error);
-      }
-    } else {
-      console.log("No saved progress for", currentFileName);
-    }
-    
-    //CHECKPOINT - make sure progress multiplier matches refinement terminal
-    const progressPercent = Math.floor((totalProgressPoints / 500) * 100);
-    const progressElem = document.getElementById("totalProgressPercent");
-    if (progressElem) {
-      progressElem.textContent = progressPercent + "%";
-    } else {
-      console.error("Element with id 'totalProgressPercent' not found.");
-    }
+      <script>
+        // Assuming updateTotalProgressPercentForCurrentFile is defined as before.
+        function updateTotalProgressPercentForCurrentFile() {
+          const fileElem = document.getElementById("staticTopName");
+          if (!fileElem) {
+            console.error("Element with id 'staticTopName' not found.");
+            return;
+          }
+          const currentFileName = fileElem.textContent.trim();
+          if (!currentFileName) {
+            console.error("No filename found in 'staticTopName'.");
+            return;
+          }
+          
+          const key = 'progress_' + currentFileName;
+          const savedState = localStorage.getItem(key);
+          let overallProgress = 0;
+          if (savedState) {
+            try {
+              const state = JSON.parse(savedState);
+              if (typeof state.overallProgress !== 'undefined') {
+                overallProgress = state.overallProgress;
+              }
+              console.log(currentFileName, "progress loaded:", state);
+            } catch (error) {
+              console.error("Error parsing saved progress for", currentFileName, ":", error);
+            }
+          } else {
+            console.log("No saved progress for", currentFileName);
+          }
+          
+          //CHECKPOINT - make sure progress multiplier matches refinement terminal
+          const progressPercent = overallProgress;
+          const progressElem = document.getElementById("totalProgressPercent");
+          if (progressElem) {
+            progressElem.textContent = Math.floor(progressPercent) + "%";
+          } else {
+            console.error("Element with id 'totalProgressPercent' not found.");
+          }
 
-    // Update the width of the progress bar element
-    const progressBar = document.getElementById("progressBar");
-    if (progressBar) {
-      progressBar.style.width = progressPercent + "%";
-    } else {
-      console.error("Element with id 'progressBar' not found.");
-    }
-  }
-  
-  // Set up a MutationObserver to watch for changes in the current file name.
-  window.addEventListener("DOMContentLoaded", function() {
-    // Update progress once on initial load
-    updateTotalProgressPercentForCurrentFile();
-  
-    const fileElem = document.getElementById("staticTopName");
-    if (!fileElem) {
-      console.error("Element with id 'staticTopName' not found.");
-      return;
-    }
-  
-    const observer = new MutationObserver((mutationsList, observer) => {
-      // Whenever the text content of staticTopName changes, update the progress
-      updateTotalProgressPercentForCurrentFile();
-    });
-    
-    observer.observe(fileElem, { characterData: true, childList: true, subtree: true });
-  });
-  </script>
+          // Update the width of the progress bar element
+          const progressBar = document.getElementById("progressBar");
+          if (progressBar) {
+            progressBar.style.width = progressPercent + "%";
+          } else {
+            console.error("Element with id 'progressBar' not found.");
+          }
+        }
+        
+        // Set up a MutationObserver to watch for changes in the current file name.
+        window.addEventListener("DOMContentLoaded", function() {
+          // Update progress once on initial load
+          updateTotalProgressPercentForCurrentFile();
+        
+          const fileElem = document.getElementById("staticTopName");
+          if (!fileElem) {
+            console.error("Element with id 'staticTopName' not found.");
+            return;
+          }
+        
+          const observer = new MutationObserver((mutationsList, observer) => {
+            // Whenever the text content of staticTopName changes, update the progress
+            updateTotalProgressPercentForCurrentFile();
+          });
+          
+          observer.observe(fileElem, { characterData: true, childList: true, subtree: true });
+        });
+      </script>
   
 
 </body>

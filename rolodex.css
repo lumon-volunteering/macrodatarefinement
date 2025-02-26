@@ -327,7 +327,8 @@
     #totalProgressPercent {
       position: absolute;
       top: 65%;
-      right: 45%;
+      left: 50%;
+      transform: translateX(-50%);
       font-size: 18px;
       color: #37dfef;
       font-weight: bold;

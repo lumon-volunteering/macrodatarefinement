@@ -1,17 +1,28 @@
 
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background: #001C2E;
-}
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #001C2E;
+  }
 
-@keyframes fadeIn {
-  from {opacity: 0; }
-  to { opacity: 1; }
-}
+  @keyframes fadeIn {
+    from {opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes popupGrow {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+  }
 
   /* Fullscreen wrapper using Grid to center content */
   #pageWrapper {
@@ -95,10 +106,6 @@ html, body {
     align-items: center;
     opacity: 0;
     animation: fadeIn 2s ease-out forwards;
-  }
-  @keyframes fadeIn {
-    from {opacity: 0; }
-    to { opacity: 1; }
   }
   
   /* Top Progress Area */
@@ -388,8 +395,8 @@ html, body {
   .lid.right { right: 0; transform-origin: top right; }
   .bin.open .lid.left { transform: rotate(-135deg); }
   .bin.open .lid.right { transform: rotate(135deg); }
-  .bin.closing .lid.left { transform: rotate(90deg); }
-  .bin.closing .lid.right { transform: rotate(-90deg); }
+  .bin.closing .lid.left { transform: rotate(0deg); }
+  .bin.closing .lid.right { transform: rotate(-0deg); }
 
   .lid-duplicate {
     position: absolute;
@@ -407,8 +414,8 @@ html, body {
   .lid-duplicate.right { right: 0; transform-origin: right center; }
   .bin.open .lid-duplicate.left { transform: rotate(-135deg); top: -20px; }
   .bin.open .lid-duplicate.right { transform: rotate(135deg); top: -20px; }
-  .bin.closing .lid-duplicate.left { transform: rotate(90deg); top: -20px; }
-  .bin.closing .lid-duplicate.right { transform: rotate(-90deg); top: -20px; }
+  .bin.closing .lid-duplicate.left { transform: rotate(0deg); top: 0px; }
+  .bin.closing .lid-duplicate.right { transform: rotate(0deg); top: 0px; }
 
   #connectorContainer {
     position: relative;
@@ -566,6 +573,7 @@ html, body {
     margin: 0 auto;
     width: 100%;
   }
+  
   #footerText {
     color: #37DFEF;
     margin-top: 5px;
@@ -580,6 +588,7 @@ html, body {
     text-shadow: 0 0 8px #fff !important;
     -webkit-text-fill-color: currentColor !important;
   }
+
   /* Popup styling */
   #popup, #popupContaminated, #popupWrongBin {
     position: absolute;
@@ -603,6 +612,31 @@ html, body {
   #popupContaminated {
     content: "";
   }
+
+  /* New 100% Completion Popup */
+  #popup100 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #001c2e;
+    border: double 10px #37dfef;
+    color: #37dfef;
+    padding: 40px;
+    font-size: 8em;
+    text-align: center;
+    -webkit-text-fill-color: #37dfef;
+    z-index: 50;
+    font-weight: bold;
+    text-shadow: 0 0 12px #fff;
+    box-shadow: 0 0 12px #fff;
+    animation: popupGrow 1s ease-out forwards;
+    width: 600px;
+    height: 150px;
+    line-height: 150px;
+    display: none;
+  }
+
   
   /* ===== CRT Effect Filter (without text shadow animation) ===== */
   @keyframes flicker {
@@ -684,12 +718,19 @@ html, body {
     pointer-events: none; /* so it won’t block underlying interactions */
   }
 
-  /* Optional: style for the globe SVG so that it can be animated */
-  #globeSvg {
+  #bouncingGlobe {
     position: absolute;
-    /* starting position (will be updated via JS) */
     left: 0;
     top: 0;
+    opacity: 0;
+    transition: opacity 1s ease 2s;
+  }
+
+  #globeSvg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    
     opacity: 0;
     transition: opacity 1s ease 2s;
   }
@@ -697,20 +738,47 @@ html, body {
     filter: drop-shadow(0 0 4px #37dfef);
   }
 
+  #processedImgClone {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    transition: opacity 1s ease 2s;
+  }
+
   #sticky1 {
     position: fixed;   /* or absolute, if you prefer relative to a parent */
     top: 7%;
-    left: 69%;
-    z-index: 100001;   /* high enough to be on top of everything */
+    left: 68%;
+    z-index: 100002;   /* high enough to be on top of everything */
     pointer-events: none;  /* so it doesn't block interactions */
     width: 300px;      /* adjust size as needed */
   }
 
   #sticky2 {
     position: fixed;   /* or absolute, if you prefer relative to a parent */
-    top: 28%;
-    left: 81%;
-    transform: rotate(-5deg);
+    top: 9%;
+    left: 83%;
+    transform: rotate(-6deg);
+    z-index: 100001;   /* high enough to be on top of everything */
+    pointer-events: none;  /* so it doesn't block interactions */
+    width: 300px;      /* adjust size as needed */
+  }
+
+  #sticky3 {
+    position: fixed;   /* or absolute, if you prefer relative to a parent */
+    top: 38%;
+    left: 70%;
+    z-index: 100000;   /* high enough to be on top of everything */
+    pointer-events: none;  /* so it doesn't block interactions */
+    width: 300px;      /* adjust size as needed */
+  }
+
+  #sticky4 {
+    position: fixed;   /* or absolute, if you prefer relative to a parent */
+    top: 63%;
+    left: 80%;
+    transform: rotate(5deg);
     z-index: 100000;   /* high enough to be on top of everything */
     pointer-events: none;  /* so it doesn't block interactions */
     width: 300px;      /* adjust size as needed */
@@ -724,3 +792,5 @@ html, body {
     z-index: 99999;   /* high enough to be on top of everything */
     pointer-events: none;  /* so it doesn't block interactions */
   }
+
+  
